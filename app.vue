@@ -15,15 +15,15 @@
           <option v-for="board in boardSizeOptions" :value="board.id">{{ board.id }}</option>
         </select>
       </div>
-      <button @click="startGame">Start Game</button>
+      <div class="button-wrapper"><button class="button" @click="startGame"><span>Nytt spill</span></button></div>
     </template>
 
     <div class="game-board grid grid-cols-4">
       <div v-for="(card, index) in cards" :key="index" class="card" :class="{ 'revealed': card.revealed }" @click="handleCardClick(index)">
         <span v-if="cardType !== 'animals'" :class="{ 'hidden': !card.revealed }">{{ card.name }}</span>
-        <img v-else :class="{ 'hidden': !card.revealed }" :src="`/images/${card.name.toLowerCase()}.jpeg`">
-        <!--         <div> {{  `images/${card.name.toLowerCase()}.jpeg` }} </div>
- -->
+        <img v-else :class="{ 'hidden': !card.revealed }" :src="`/images/${card.name.toLowerCase()}.png`">
+        <!--   <div> {{  `images/${card.name.toLowerCase()}.jpeg` }} </div> -->
+
       </div>
     </div>
 
@@ -42,7 +42,7 @@
           </li>
         </ul>
       </div>
-      <button @click="startGame">Start Game</button>
+      <div class="button-wrapper"><button class="button" @click="startGame"><span>Prøv igjen</span></button></div>
     </div>
 
   </div>
@@ -51,6 +51,14 @@
 <script setup>
 import { ref } from 'vue';
 import { useStorage } from '@vueuse/core';
+import { useSound } from '@vueuse/sound'
+import buttonSfx from '../assets/sounds/404740__owlstorm__retro-video-game-sfx-move.wav'
+import gameMusic from '../assets/sounds/music.mp3'
+
+
+const { play: startGameSound, isPlaying: gameSoundIsPlaying } = useSound(gameMusic, { volume: 0.3 })
+const { play: clickSound } = useSound(buttonSfx)
+
 
 const cardType = ref('animals');
 const boardSizeId = ref('2x2');
@@ -79,6 +87,12 @@ const generateUUID = () => {
 };
 
 const startGame = () => {
+
+  if(!gameSoundIsPlaying.value){
+    startGameSound();
+  }
+
+  
   gameStartTime.value = Date.now(); // Set the start time to the current time
   hits.value = 0;
   misses.value = 0;
@@ -88,8 +102,8 @@ const startGame = () => {
   if (intervalId !== null) {
     clearInterval(intervalId);
   }
-
-
+  
+  
 
   // Start a new interval to update elapsed time every second
   intervalId = setInterval(() => {
@@ -134,7 +148,7 @@ const boardSizeOptions = [
 ]
 
 const availableCards = {
-  'animals': ['Lion', 'Tiger', 'Elephant', 'Giraffe', 'Bear', 'Zebra', 'Panda', 'Kangaroo', 'Monkey', 'Wolf'],
+  'animals': ['Lion', 'Tiger', 'Elephant', 'Giraffe', 'Bear', 'Zebra', 'Panda', 'Kangaroo', 'Monkey', 'Wolf', 'Dog', 'Cow', 'Fish', 'Horse', 'Sheep', 'Snake',],
 
 
   'fruits': ['Apple', 'Banana', 'Orange', 'Mango', 'Grapes', 'Pineapple', 'Strawberry', 'Cherry', 'Peach', 'Pear'],
@@ -189,17 +203,19 @@ const shuffleArray = (array) => {
 
 const clickedCards = ref([]);
 const handleCardClick = (index) => {
+
   const card = cards.value[index];
   if (card.revealed || clickedCards.value.length >= 2) {
     return; // Ignore click if the card is already revealed or two cards are clicked
   }
-
+  
   card.revealed = true;  // Reveal the clicked card
   clickedCards.value.push(index);
-
+  
   if (clickedCards.value.length === 2) {
     checkForMatch();
   }
+  clickSound();
 };
 
 const checkForMatch = () => {
@@ -222,8 +238,10 @@ const checkForMatch = () => {
   }
 
   if (cards.value.every(card => card.revealed)) {
+    setTimeout(() => {
+      updateScoreBoard(); // This will now also handle the top 10 check
+    }, 100);
     clearInterval(intervalId);
-    updateScoreBoard(); // This will now also handle the top 10 check
   }
 };
 
@@ -301,14 +319,33 @@ onUnmounted(() => {
 
 
 <style>
-.game-board {
+html,
+body {
+  min-height: 100vh;
+}
 
+body {
+  background:
+    linear-gradient(322deg,
+      #ba4aff, rgba(186, 74, 255, 0) 70%),
+    linear-gradient(178deg,
+      #008aff, rgba(0, 138, 255, 0) 70%),
+    linear-gradient(24deg,
+      #00ffc6, rgba(0, 255, 198, 0) 35%);
+
+  background-size: cover;
+  min-height: 100%;
+}
+
+.game-board {
   justify-content: center;
   margin-top: 20px;
+  user-select: none;
 }
 
 .card {
-  border: 1px solid black;
+  background: #fff;
+  border: 1px solid ccc;
   padding: 20px;
   margin: 5px;
   text-align: center;
@@ -320,13 +357,82 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
+  transition: all 0.2s ease-in-out;
+  border-radius: 5px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.card.revealed {
+  opacity: 1;
 }
 
 .card:hover {
   opacity: 1;
 }
 
+.card:active {
+  transform: translateY(2px);
+
+}
+
 .hidden {
   visibility: hidden;
+}
+
+
+
+.button-wrapper {
+  position: relative;
+  display: inline-block;
+  margin: 20px;
+}
+
+.button-wrapper .button {
+  color: white;
+  font-family: Helvetica, sans-serif;
+  font-weight: bold;
+  font-size: 36px;
+  text-align: center;
+  text-decoration: none;
+  background-color: #FFA12B;
+  display: block;
+  position: relative;
+  padding: 20px 40px;
+
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  text-shadow: 0px 1px 0px #000;
+  filter: dropshadow(color=#000, offx=0px, offy=1px);
+
+  -webkit-box-shadow: inset 0 1px 0 #FFE5C4, 0 10px 0 #915100;
+  -moz-box-shadow: inset 0 1px 0 #FFE5C4, 0 10px 0 #915100;
+  box-shadow: inset 0 1px 0 #FFE5C4, 0 10px 0 #915100;
+
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+}
+
+.button-wrapper .button:active {
+  top: 10px;
+  background-color: #F78900;
+
+  -webkit-box-shadow: inset 0 1px 0 #FFE5C4, inset 0 -3px 0 #915100;
+  -moz-box-shadow: inset 0 1px 0 #FFE5C4, inset 0 -3pxpx 0 #915100;
+  box-shadow: inset 0 1px 0 #FFE5C4, inset 0 -3px 0 #915100;
+}
+
+.button-wrapper:after {
+  content: "";
+  height: 100%;
+  width: 100%;
+  padding: 4px;
+  position: absolute;
+  bottom: -15px;
+  left: -4px;
+  z-index: -1;
+  background-color: #2B1800;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
 }
 </style>

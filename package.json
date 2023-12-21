@@ -17,6 +17,7 @@
     "vue-router": "^4.2.5"
   },
   "dependencies": {
-    "@vueuse/core": "^10.7.0"
+    "@vueuse/core": "^10.7.0",
+    "@vueuse/sound": "^2.0.1"
   }
 }
