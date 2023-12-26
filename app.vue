@@ -1,19 +1,20 @@
 <template>
   <div>
 
-    <NewGameForm mode="new-game" v-if="!gameIsOngoing" :availableCardTypes="availableCardTypes" :boardSizeOptions="boardSizeOptions" @startGame="startGame" />
+    <NewGameForm :game-state="gameState" mode="new-game" v-if="!gameIsOngoing" :availableCardTypes="availableCardTypes" :boardSizeOptions="boardSizeOptions" @startGame="startGame" />
 
     <GameBoard
-      :cards="cards"
+      :cards="gameState.cards"
       :boardSizeId="boardSizeId"
       :cardType="cardType"
       @cardClicked="handleCardClick"
+      :game-state="gameState"
       v-if="gameIsOngoing">
 
     </GameBoard>
 
     <div class="current-score" v-if="gameIsOngoing">
-      <p>Time: {{ elapsedTime }}s</p>
+      <p>Time: {{ gameState.elapsedTime }}s</p>
       <p>Accuracy: {{ currentAccuracy }}%</p>
     </div>
 
@@ -24,7 +25,7 @@
             <h2>Score Board</h2>
             <div>
               <ul>
-                <li v-for="(score, index) in currentGameScoreBoardReactive" :key="index">
+                <li v-for="(score, index) in currentGameScoreBoardReactive" :key="index" :class="{ 'new-score': score.isNew }">
                   {{ index + 1 }} : {{ score.playerName }} : Time: {{ score.timeSpent }}s, Accuracy: {{ (score.accuracy * 100).toFixed(2) }}%
                 </li>
               </ul>
@@ -37,7 +38,7 @@
 
     <div class="" v-if="gameIsOngoing">
 
-      <NewGameForm mode="retry" @gotoBoardOptions="stopCurrentGame" :availableCardTypes="availableCardTypes" :boardSizeOptions="boardSizeOptions" @startGame="startGame" />
+      <NewGameForm :game-state="gameState" mode="retry" @gotoBoardOptions="stopCurrentGame" :availableCardTypes="availableCardTypes" :boardSizeOptions="boardSizeOptions" @startGame="startGame" />
     </div>
 
   </div>
@@ -56,33 +57,39 @@ const { play: startGameSound, isPlaying: gameSoundIsPlaying } = useSound(gameMus
 const { play: clickSound } = useSound(buttonSfx)
 const { play: correctSound } = useSound(correctSoundGfx);
 
+const clickedCards = ref([]);
 
-const gameIsOngoing = computed(() => {
-  return currentGame.value.started;
+
+const gameState = reactive({
+  cardType: 'animals',
+  boardSizeId: '2x2',
+  cards: [],
+  elapsedTime: 0,
+  gameStartTime: null,
+  hits: 0,
+  misses: 0,
+  currentGame: { uuid: '', playerName: 'Anonymous', started: false },
+  clickedCards: [],
+  // Add other properties here as needed
 });
 
+const gameIsOngoing = computed(() => gameState.currentGame.started);
 
 function stopCurrentGame () {
-  currentGame.value = { uuid: '', playerName: 'Anonymous', started: false };
+  gameState.currentGame.uuid = '';
+  gameState.currentGame.started = false;
   clearInterval(intervalId);
 }
-
 const cardType = ref('animals');
 const boardSizeId = ref('2x2');
-const cards = ref([]);
-const elapsedTime = ref(0);
-const storeBoardLocalStorage = useStorage('memoryGameScoreBoardReactive', {})
-
-const currentGame = ref({ uuid: '', playerName: 'Anonymous', started: false });
+const storeBoardLocalStorage = useStorage('memoryGameScoreBoardReactive', {});
 
 const currentGameScoreBoardReactive = computed(() => {
-  const scoreKey = `${boardSizeId.value}-${cardType.value}`;
+  const scoreKey = `${gameState.boardSizeId}-${gameState.cardType}`;
   return storeBoardLocalStorage.value?.[scoreKey]?.splice(0, 10) || [];
 });
 
-const gameStartTime = ref(null);
-const hits = ref(0);
-const misses = ref(0);
+
 let intervalId = null;
 
 
@@ -93,27 +100,31 @@ const generateUUID = () => {
   });
 };
 
-function resetGame () {
-  currentGame.value = { uuid: '', playerName: 'Anonymous', started: false };
-  clearInterval(intervalId);
-}
 
 function startGame (gameOptions) {
 
+  console.log(gameOptions);
 
-  if (!gameSoundIsPlaying.value) {
+  if (!gameSoundIsPlaying.value && gameOptions.musicOn) {
     startGameSound();
   }
 
-  cardType.value = gameOptions.cardType;
-  boardSizeId.value = gameOptions.boardSizeId;
+  if (gameOptions.playerName) {
+    gameState.currentGame.playerName = gameOptions.playerName;
+  }
 
+  gameState.currentGame.uuid = generateUUID();
+  gameState.currentGame.started = true;
 
-  gameStartTime.value = Date.now(); // Set the start time to the current time
-  hits.value = 0;
-  misses.value = 0;
-  cards.value = generateAndShuffleCards(gameOptions.cardType, gameOptions.boardSizeId);
-  currentGame.value = { uuid: generateUUID(), playerName: gameOptions.playerName, started: true };
+  gameState.cardType = gameOptions.cardType;
+  gameState.boardSizeId = gameOptions.boardSizeId;
+
+  gameState.gameStartTime = Date.now();
+  gameState.hits = 0;
+  gameState.misses = 0;
+  gameState.cards = generateAndShuffleCards(gameOptions.cardType, gameOptions.boardSizeId);
+  /*   gameState.currentGame = { uuid: generateUUID(), playerName: gameOptions.playerName, started: true };
+   */
   // Clear existing interval if any
   if (intervalId !== null) {
     clearInterval(intervalId);
@@ -121,7 +132,7 @@ function startGame (gameOptions) {
 
   // Start a new interval to update elapsed time every second
   intervalId = setInterval(() => {
-    elapsedTime.value = ((Date.now() - gameStartTime.value) / 1000).toFixed(2);
+    gameState.elapsedTime = ((Date.now() - gameState.gameStartTime) / 1000).toFixed(2);
   }, 10);
 
 };
@@ -215,10 +226,10 @@ const shuffleArray = (array) => {
   return array;
 };
 
-const clickedCards = ref([]);
-const handleCardClick = (index) => {
+function handleCardClick (index) {
 
-  const card = cards.value[index];
+  const card = gameState.cards[index];
+
   if (card.revealed || clickedCards.value.length >= 2) {
     return; // Ignore click if the card is already revealed or two cards are clicked
   }
@@ -248,17 +259,17 @@ const handleCardClick = (index) => {
 
 const checkForMatch = () => {
   const [firstIndex, secondIndex] = clickedCards.value;
-  const firstCard = cards.value[firstIndex];
-  const secondCard = cards.value[secondIndex];
+  const firstCard = gameState.cards[firstIndex];
+  const secondCard = gameState.cards[secondIndex];
   let clickIsMatch = false;
 
   if (firstCard.name === secondCard.name) {
     // Match found, keep cards revealed and reset clickedCards
-    hits.value++;
+    gameState.hits++;
     clickedCards.value = [];
     clickIsMatch = true;
   } else {
-    misses.value++;
+    gameState.misses++;
     // No match, hide both cards after a short delay
     setTimeout(() => {
       firstCard.revealed = false;
@@ -268,7 +279,7 @@ const checkForMatch = () => {
     }, 1000);
   }
 
-  if (cards.value.every(card => card.revealed)) {
+  if (gameState.cards.every(card => card.revealed)) {
     setTimeout(() => {
       updateScoreBoard(); // This will now also handle the top 10 check
     }, 100);
@@ -281,10 +292,10 @@ const checkForMatch = () => {
 
 const updateScoreBoard = () => {
   const finalScore = {
-    timeSpent: parseFloat(elapsedTime.value),
+    timeSpent: parseFloat(gameState.elapsedTime),
     accuracy: parseFloat(currentAccuracy.value) / 100,
-    boardSize: boardSizeId.value,
-    cardType: cardType.value
+    boardSize: gameState.boardSizeId,
+    cardType: gameState.cardType
   };
 
   const scoreKey = `${finalScore.boardSize}-${finalScore.cardType}`;
@@ -299,9 +310,21 @@ const updateScoreBoard = () => {
     storeBoardLocalStorage.value[scoreKey] = [];
   }
 
+
   // Add the new score (temporarily without a name)
-  const newScore = { ...finalScore, uuid: currentGame.value.uuid, playerName: currentGame.value.playerName };
+  const newScore = {
+    ...finalScore,
+    uuid: gameState.currentGame.uuid,
+    playerName: gameState.currentGame.playerName,
+    isNew: true // Mark as new
+  };
   storedScoreBoard[scoreKey].push(newScore);
+
+  storedScoreBoard[scoreKey].forEach(score => {
+    if (score.uuid !== newScore.uuid) {
+      score.isNew = false;
+    }
+  });
 
   // Sort the scores and keep only the top 10
   storedScoreBoard[scoreKey].sort((a, b) => {
@@ -312,14 +335,14 @@ const updateScoreBoard = () => {
 
 
   const isHighScore = storedScoreBoard[scoreKey].some((score, index) => {
-    return score.uuid === currentGame.value.uuid && index < 10;
+    return score.uuid === gameState.currentGame.uuid && index < 10;
   });
 
   if (isHighScore) {
 
     showHighScoreModal();
 
-    newScore.playerName = playerName.value;
+    //newScore.playerName = playerName.value;
     storedScoreBoard[scoreKey] = storedScoreBoard[scoreKey].map(score => {
       return score.uuid === newScore.uuid ? newScore : score;
     });
@@ -344,12 +367,12 @@ function hideHighScoreModal () {
 }
 
 const currentAccuracy = computed(() => {
-  const totalAttempts = hits.value + misses.value;
-  return totalAttempts > 0 ? ((hits.value / totalAttempts) * 100).toFixed(2) : 0;
+  const totalAttempts = gameState.hits + gameState.misses;
+  return totalAttempts > 0 ? ((gameState.hits / totalAttempts) * 100).toFixed(2) : 0;
 });
 
 function gotoNewGameForm () {
-  currentGame.value = { uuid: '', playerName: 'Anonymous', started: false };
+  gameState.currentGame = { uuid: '', playerName: 'Anonymous', started: false };
   clearInterval(intervalId);
 }
 
@@ -384,9 +407,11 @@ body {
 }
 
 .game-board {
+  display: grid;
+  gap: 10px; /* Adjust the gap as needed */
   justify-content: center;
-  margin-top: 20px;
-  user-select: none;
+  align-items: center;
+  /* Grid layout will be set dynamically */
 }
 
 .card {
@@ -520,5 +545,10 @@ body {
   max-width: 600px;
   max-height: 80%;
   overflow-y: auto;
+}
+
+.new-score {
+  background-color: lightgreen; /* or any highlight color */
+  /* Other styling as needed */
 }
 </style>

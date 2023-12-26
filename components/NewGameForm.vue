@@ -1,6 +1,7 @@
 <template >
   <div class="new-game-form">
 
+
     <div class="game-options flex flex-col items-center gap-4 text-center" v-if="mode === 'new-game'">
 
       <div>
@@ -23,6 +24,14 @@
           <option v-for="board in boardSizeOptions" :value="board.id">{{ board.id }}</option>
         </select>
       </div>
+      <div>
+        <label class="block" for="gfx">GFX:</label>
+        <input type="checkbox" id="gfx" v-model="gfxOn">
+      </div>
+      <div>
+        <label class="block" for="music">Music:</label>
+        <input type="checkbox" id="music" v-model="musicOn">
+        </div>
     </div>
 
     <div class="buttons">
@@ -60,6 +69,7 @@ const props = defineProps<{
   availableCardTypes: string[]
   boardSizeOptions: { id: number, name: string }[],
   mode: any,
+  gameState: any,
 }>();
 
 const emit = defineEmits(['startGame', 'gotoBoardOptions']);
@@ -67,9 +77,11 @@ const emit = defineEmits(['startGame', 'gotoBoardOptions']);
 const playerName = ref('');
 const cardType = ref(props.availableCardTypes[0]);
 const boardSizeId = ref(props.boardSizeOptions[0].id);
+const gfxOn = ref(true);
+const musicOn = ref(false);
 
 function startGame() {
-  emit('startGame', { cardType: cardType.value, boardSizeId: boardSizeId.value, playerName: playerName.value });
+  emit('startGame', { cardType: cardType.value, boardSizeId: boardSizeId.value, playerName: props.gameState.playerName ? props.gameState.playerName : playerName.value, gfxOn: gfxOn.value, musicOn: musicOn.value });
 }
 
 const playerNameInputWidth = computed(() => {
