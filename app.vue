@@ -1,48 +1,43 @@
 <template>
   <div>
 
-    <template v-if="!currentGame.started">
+    <NewGameForm mode="new-game" v-if="!gameIsOngoing" :availableCardTypes="availableCardTypes" :boardSizeOptions="boardSizeOptions" @startGame="startGame" />
 
-      <div>
-        <label for="card-type">Choose Card Type:</label>
-        <select id="card-type" v-model="cardType">
-          <option v-for="cardType in availableCardTypes" :value="cardType">{{ cardType }}</option>
-        </select>
-      </div>
-      <div>
-        <label for="board-size">Board Size:</label>
-        <select id="board-size" v-model="boardSizeId">
-          <option v-for="board in boardSizeOptions" :value="board.id">{{ board.id }}</option>
-        </select>
-      </div>
-      <div class="button-wrapper"><button class="button" @click="startGame"><span>Nytt spill</span></button></div>
-    </template>
+    <GameBoard
+      :cards="cards"
+      :boardSizeId="boardSizeId"
+      :cardType="cardType"
+      @cardClicked="handleCardClick"
+      v-if="gameIsOngoing">
 
-    <div class="game-board grid grid-cols-4">
-      <div v-for="(card, index) in cards" :key="index" class="card" :class="{ 'revealed': card.revealed }" @click="handleCardClick(index)">
-        <span v-if="cardType !== 'animals'" :class="{ 'hidden': !card.revealed }">{{ card.name }}</span>
-        <img v-else :class="{ 'hidden': !card.revealed }" :src="`/images/${card.name.toLowerCase()}.png`">
-        <!--   <div> {{  `images/${card.name.toLowerCase()}.jpeg` }} </div> -->
+    </GameBoard>
 
-      </div>
-    </div>
-
-    <div class="current-score">
-      <h2>Current Score</h2>
+    <div class="current-score" v-if="gameIsOngoing">
       <p>Time: {{ elapsedTime }}s</p>
       <p>Accuracy: {{ currentAccuracy }}%</p>
     </div>
 
-    <div class="score-board">
-      <h2>Score Board Reactive</h2>
-      <div>
-        <ul>
-          <li v-for="(score, index) in currentGameScoreBoardReactive" :key="index">
-            {{ index + 1 }} : {{ score.playerName }} : Time: {{ score.timeSpent }}s, Accuracy: {{ (score.accuracy * 100).toFixed(2) }}%
-          </li>
-        </ul>
+    <Modal v-if="highScoreModalVisible" @closeModal="hideHighScoreModal">
+      <div class="score-board-modal-wrapper">
+        <div class="score-board-modal">
+          <div class="score-board-modal-content">
+            <h2>Score Board</h2>
+            <div>
+              <ul>
+                <li v-for="(score, index) in currentGameScoreBoardReactive" :key="index">
+                  {{ index + 1 }} : {{ score.playerName }} : Time: {{ score.timeSpent }}s, Accuracy: {{ (score.accuracy * 100).toFixed(2) }}%
+                </li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
       </div>
-      <div class="button-wrapper"><button class="button" @click="startGame"><span>Prøv igjen</span></button></div>
+    </Modal>
+
+    <div class="" v-if="gameIsOngoing">
+
+      <NewGameForm mode="retry" @gotoBoardOptions="stopCurrentGame" :availableCardTypes="availableCardTypes" :boardSizeOptions="boardSizeOptions" @startGame="startGame" />
     </div>
 
   </div>
@@ -53,12 +48,24 @@ import { ref } from 'vue';
 import { useStorage } from '@vueuse/core';
 import { useSound } from '@vueuse/sound'
 import buttonSfx from '../assets/sounds/404740__owlstorm__retro-video-game-sfx-move.wav'
+import correctSoundGfx from '../assets/sounds/665182__el_boss__item-or-material-pickup-pop-2-of-3.wav'
 import gameMusic from '../assets/sounds/music.mp3'
 
 
 const { play: startGameSound, isPlaying: gameSoundIsPlaying } = useSound(gameMusic, { volume: 0.3 })
 const { play: clickSound } = useSound(buttonSfx)
+const { play: correctSound } = useSound(correctSoundGfx);
 
+
+const gameIsOngoing = computed(() => {
+  return currentGame.value.started;
+});
+
+
+function stopCurrentGame () {
+  currentGame.value = { uuid: '', playerName: 'Anonymous', started: false };
+  clearInterval(intervalId);
+}
 
 const cardType = ref('animals');
 const boardSizeId = ref('2x2');
@@ -86,24 +93,31 @@ const generateUUID = () => {
   });
 };
 
-const startGame = () => {
+function resetGame () {
+  currentGame.value = { uuid: '', playerName: 'Anonymous', started: false };
+  clearInterval(intervalId);
+}
 
-  if(!gameSoundIsPlaying.value){
+function startGame (gameOptions) {
+
+
+  if (!gameSoundIsPlaying.value) {
     startGameSound();
   }
 
-  
+  cardType.value = gameOptions.cardType;
+  boardSizeId.value = gameOptions.boardSizeId;
+
+
   gameStartTime.value = Date.now(); // Set the start time to the current time
   hits.value = 0;
   misses.value = 0;
-  cards.value = generateAndShuffleCards(cardType.value, boardSizeId.value);
-  currentGame.value = { uuid: generateUUID(), playerName: 'Anonymous', started: true };
+  cards.value = generateAndShuffleCards(gameOptions.cardType, gameOptions.boardSizeId);
+  currentGame.value = { uuid: generateUUID(), playerName: gameOptions.playerName, started: true };
   // Clear existing interval if any
   if (intervalId !== null) {
     clearInterval(intervalId);
   }
-  
-  
 
   // Start a new interval to update elapsed time every second
   intervalId = setInterval(() => {
@@ -208,25 +222,41 @@ const handleCardClick = (index) => {
   if (card.revealed || clickedCards.value.length >= 2) {
     return; // Ignore click if the card is already revealed or two cards are clicked
   }
-  
+
   card.revealed = true;  // Reveal the clicked card
   clickedCards.value.push(index);
-  
+
+  let clickIsMatch;
+
   if (clickedCards.value.length === 2) {
-    checkForMatch();
+    clickIsMatch = checkForMatch();
   }
-  clickSound();
+
+  if (clickIsMatch) {
+    correctSound();
+  }
+  else {
+    clickSound();
+  }
+
+
+
+
 };
+
+
 
 const checkForMatch = () => {
   const [firstIndex, secondIndex] = clickedCards.value;
   const firstCard = cards.value[firstIndex];
   const secondCard = cards.value[secondIndex];
+  let clickIsMatch = false;
 
   if (firstCard.name === secondCard.name) {
     // Match found, keep cards revealed and reset clickedCards
     hits.value++;
     clickedCards.value = [];
+    clickIsMatch = true;
   } else {
     misses.value++;
     // No match, hide both cards after a short delay
@@ -234,6 +264,7 @@ const checkForMatch = () => {
       firstCard.revealed = false;
       secondCard.revealed = false;
       clickedCards.value = [];
+      clickIsMatch = false;
     }, 1000);
   }
 
@@ -243,6 +274,7 @@ const checkForMatch = () => {
     }, 100);
     clearInterval(intervalId);
   }
+  return clickIsMatch;
 };
 
 
@@ -284,13 +316,13 @@ const updateScoreBoard = () => {
   });
 
   if (isHighScore) {
-    const playerName = prompt("Congratulations! You've achieved a high score! Enter your name:");
-    if (playerName) {
-      newScore.playerName = playerName;
-      storedScoreBoard[scoreKey] = storedScoreBoard[scoreKey].map(score => {
-        return score.uuid === newScore.uuid ? newScore : score;
-      });
-    }
+
+    showHighScoreModal();
+
+    newScore.playerName = playerName.value;
+    storedScoreBoard[scoreKey] = storedScoreBoard[scoreKey].map(score => {
+      return score.uuid === newScore.uuid ? newScore : score;
+    });
   }
 
   // Check if the player's score is in the top 10
@@ -300,12 +332,26 @@ const updateScoreBoard = () => {
 
 };
 
+const highScoreModalVisible = ref(false);
 
+function showHighScoreModal () {
+  highScoreModalVisible.value = true;
+
+}
+
+function hideHighScoreModal () {
+  highScoreModalVisible.value = false;
+}
 
 const currentAccuracy = computed(() => {
   const totalAttempts = hits.value + misses.value;
   return totalAttempts > 0 ? ((hits.value / totalAttempts) * 100).toFixed(2) : 0;
 });
+
+function gotoNewGameForm () {
+  currentGame.value = { uuid: '', playerName: 'Anonymous', started: false };
+  clearInterval(intervalId);
+}
 
 
 onUnmounted(() => {
@@ -403,8 +449,6 @@ body {
   text-shadow: 0px 1px 0px #000;
   filter: dropshadow(color=#000, offx=0px, offy=1px);
 
-  -webkit-box-shadow: inset 0 1px 0 #FFE5C4, 0 10px 0 #915100;
-  -moz-box-shadow: inset 0 1px 0 #FFE5C4, 0 10px 0 #915100;
   box-shadow: inset 0 1px 0 #FFE5C4, 0 10px 0 #915100;
 
   -webkit-border-radius: 5px;
@@ -421,6 +465,16 @@ body {
   box-shadow: inset 0 1px 0 #FFE5C4, inset 0 -3px 0 #915100;
 }
 
+/* 
+.button-wrapper .button--white{
+  background-color: white;
+  box-shadow: inset 0 1px 0 #ccc, 0 10px 0 #444;
+
+}
+.button-wrapper .button--white:active{
+  background-color: white;
+} */
+
 .button-wrapper:after {
   content: "";
   height: 100%;
@@ -434,5 +488,37 @@ body {
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
   border-radius: 5px;
+}
+
+.buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+}
+
+
+.score-board-modal-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.score-board-modal {
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.3);
+  width: 80%;
+  max-width: 600px;
+  max-height: 80%;
+  overflow-y: auto;
 }
 </style>
