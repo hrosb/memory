@@ -15,13 +15,13 @@
       <div>
         <label class="block" for="card-type">Choose Card Type:</label>
         <select id="card-type" v-model="cardType">
-          <option v-for="cardType in availableCardTypes" :value="cardType">{{ cardType }}</option>
+          <option v-for="ct in availableCardTypes" :value="ct" :selected="ct === cardType">{{ ct }}</option>
         </select>
       </div>
       <div>
         <label class="block" for="board-size">Board Size:</label>
         <select id="board-size" v-model="boardSizeId">
-          <option v-for="board in boardSizeOptions" :value="board.id">{{ board.id }}</option>
+          <option v-for="board in boardSizeOptions" :value="board.id" :selected="board.id === boardSizeId">{{ board.name }}</option>
         </select>
       </div>
       <div>
@@ -75,8 +75,8 @@ const props = defineProps<{
 const emit = defineEmits(['startGame', 'gotoBoardOptions']);
 
 const playerName = ref('');
-const cardType = ref(props.availableCardTypes[0]);
-const boardSizeId = ref(props.boardSizeOptions[0].id);
+const cardType = ref(props.gameState.cardType);
+const boardSizeId = ref(props.gameState.boardSizeId);
 const gfxOn = ref(true);
 const musicOn = ref(false);
 

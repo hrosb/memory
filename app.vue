@@ -53,16 +53,54 @@ import correctSoundGfx from '../assets/sounds/665182__el_boss__item-or-material-
 import gameMusic from '../assets/sounds/music.mp3'
 
 
+import alfabetet from '../assets/sounds/norwegian-letter-sounds/alfabetlyder_01.mp3';
+
+
+
 const { play: startGameSound, isPlaying: gameSoundIsPlaying } = useSound(gameMusic, { volume: 0.3 })
 const { play: clickSound } = useSound(buttonSfx)
 const { play: correctSound } = useSound(correctSoundGfx);
+
+const { play: playLetterSound } = useSound(alfabetet, {
+  sprite: {
+    a: [500, 500], // duration: 500ms, endTime: 1000
+    b: [1600, 200], // duration: 200ms, endTime: 1800
+    c: [2550, 350], // duration: 350ms, endTime: 2900
+    d: [3600, 200], // duration: 200ms, endTime: 3800
+    e: [4750, 350], // duration: 350ms, endTime: 5100
+    f: [7500, 250], // duration: 250ms, endTime: 7750
+    g: [8900, 200], // duration: 200ms, endTime: 9100
+    h: [10100, 200], // duration: 200ms, endTime: 10300
+    i: [11250, 450], // duration: 450ms, endTime: 11700
+    j: [12400, 250], // duration: 250ms, endTime: 12650
+    k: [13450, 200], // duration: 200ms, endTime: 13650
+    l: [14550, 450], // duration: 450ms, endTime: 15000
+    m: [15700, 500], // duration: 500ms, endTime: 16200
+    n: [16900, 600], // duration: 600ms, endTime: 17500
+    o: [18000, 600], // duration: 600ms, endTime: 18600
+    p: [19250, 250], // duration: 250ms, endTime: 19500
+    q: [20350, 450], // duration: 450ms, endTime: 20800
+    r: [21600, 400], // duration: 400ms, endTime: 22000
+    s: [22750, 550], // duration: 550ms, endTime: 23300
+    t: [24000, 250], // duration: 250ms, endTime: 24250
+    u: [25000, 500], // duration: 500ms, endTime: 25500
+    v: [26300, 400], // duration: 400ms, endTime: 26700
+    w: [26300, 400], // duration: 400ms, endTime: 26700
+    x: [27300, 300], // duration: 300ms, endTime: 27600
+    y: [28250, 250], // duration: 250ms, endTime: 28500
+    z: [29200, 300], // duration: 300ms, endTime: 29500
+    ae: [30400, 350], // duration: 350ms, endTime: 30750
+    oe: [31800, 350], // duration: 350ms, endTime: 32150
+    aa: [32850, 300], // duration: 300ms, endTime: 33150
+  },
+}) 
 
 const clickedCards = ref([]);
 
 
 const gameState = reactive({
-  cardType: 'animals',
-  boardSizeId: '2x2',
+  cardType: 'letters',
+  boardSizeId: '4x4',
   cards: [],
   elapsedTime: 0,
   gameStartTime: null,
@@ -143,32 +181,38 @@ const boardSizeOptions = [
   {
     id: '2x2',
     rows: 2,
-    columns: 2
+    columns: 2,
+    name: 'Too easy'
   },
   {
     id: '2x3',
     rows: 3,
-    columns: 2
+    columns: 2,
+    name: 'Very easy'
   },
   {
     id: '3x4',
     rows: 4,
-    columns: 3
+    columns: 3,
+    name: 'Easy'
   },
   {
     id: '4x4',
     rows: 4,
-    columns: 4
+    columns: 4,
+    name: 'Normal'
   },
   {
     id: '4x5',
     rows: 5,
-    columns: 5
+    columns: 5,
+    name: 'Hard'
   },
   {
     id: '6x6',
     rows: 6,
-    columns: 6
+    columns: 6,
+    name: 'Expert'
   }
 ]
 
@@ -178,7 +222,9 @@ const availableCards = {
 
   'fruits': ['Apple', 'Banana', 'Orange', 'Mango', 'Grapes', 'Pineapple', 'Strawberry', 'Cherry', 'Peach', 'Pear'],
   'numbers': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
-  'letters': ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'Æ', 'Ø', 'Å']
+  'letters': ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 
+  //'W', 'X', 'Y', 'Z', 'Æ', 'Ø', 'Å'
+  ]
 };
 
 const availableCardTypes = Object.keys(availableCards);
@@ -247,7 +293,16 @@ function handleCardClick (index) {
     correctSound();
   }
   else {
-    clickSound();
+
+    if(gameState.cardType === 'letters'){
+      console.log(card.name.toLowerCase())
+      playLetterSound({id: card.name.toLowerCase()});
+    }
+    else{
+      clickSound();
+    }
+
+    
   }
 
 
@@ -408,9 +463,11 @@ body {
 
 .game-board {
   display: grid;
-  gap: 10px; /* Adjust the gap as needed */
   justify-content: center;
   align-items: center;
+  transform-origin: top center;
+  gap: 10px;
+  user-select: none;
   /* Grid layout will be set dynamically */
 }
 
@@ -418,7 +475,6 @@ body {
   background: #fff;
   border: 1px solid ccc;
   padding: 20px;
-  margin: 5px;
   text-align: center;
   cursor: pointer;
   flex-basis: calc(100% / var(--board-size) - 10px);
