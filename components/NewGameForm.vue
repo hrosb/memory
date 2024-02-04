@@ -1,11 +1,11 @@
 <template >
-  <div class="new-game-form">
+  <div class="new-game-form" v-if="gameState">
 
 
     <div class="game-options flex flex-col items-center gap-4 text-center" v-if="mode === 'new-game'">
 
       <div>
-        <label class="block" for="name">Name:</label>
+        <label class="block" for="name">Navn:</label>
         <input :style="{
           width: playerNameInputWidth,
         }"
@@ -13,23 +13,23 @@
       </div>
 
       <div>
-        <label class="block" for="card-type">Choose Card Type:</label>
+        <label class="block" for="card-type">Type kort:</label>
         <select id="card-type" v-model="cardType">
-          <option v-for="ct in availableCardTypes" :value="ct" :selected="ct === cardType">{{ ct }}</option>
+          <option v-for="ct in availableCardTypes" :value="ct.type" :selected="ct.type === cardType">{{ ct.name_nb }}</option>
         </select>
       </div>
       <div>
-        <label class="block" for="board-size">Board Size:</label>
+        <label class="block" for="board-size">Vanskelighetsgrad:</label>
         <select id="board-size" v-model="boardSizeId">
-          <option v-for="board in boardSizeOptions" :value="board.id" :selected="board.id === boardSizeId">{{ board.name }}</option>
+          <option v-for="board in boardSizeOptions" :value="board.id" :selected="board.id === boardSizeId">{{ board.name_nb }}</option>
         </select>
       </div>
       <div>
-        <label class="block" for="gfx">GFX:</label>
+        <label class="block" for="gfx">Lyder:</label>
         <input type="checkbox" id="gfx" v-model="gfxOn">
       </div>
       <div>
-        <label class="block" for="music">Music:</label>
+        <label class="block" for="music">Musikk:</label>
         <input type="checkbox" id="music" v-model="musicOn">
         </div>
     </div>
@@ -64,6 +64,8 @@
 
 
 <script setup lang="ts">
+import { useLocalStorage } from '@vueuse/core';
+
 
 const props = defineProps<{
   availableCardTypes: string[]
@@ -74,7 +76,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['startGame', 'gotoBoardOptions']);
 
-const playerName = ref('');
+const playerName = useLocalStorage('playerName', '');
 const cardType = ref(props.gameState.cardType);
 const boardSizeId = ref(props.gameState.boardSizeId);
 const gfxOn = ref(true);

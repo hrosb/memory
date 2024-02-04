@@ -182,52 +182,68 @@ const boardSizeOptions = [
     id: '2x2',
     rows: 2,
     columns: 2,
-    name: 'Too easy'
+    name: 'Too easy',
+    name_nb: 'Altfor enkelt'
   },
   {
     id: '2x3',
     rows: 3,
     columns: 2,
-    name: 'Very easy'
+    name: 'Very easy',
+    name_nb: 'Veldig enkelt'
   },
   {
     id: '3x4',
     rows: 4,
     columns: 3,
-    name: 'Easy'
+    name: 'Easy',
+    name_nb: 'Enkelt'
   },
   {
     id: '4x4',
     rows: 4,
     columns: 4,
-    name: 'Normal'
+    name: 'Normal',
+    name_nb: 'Normal'    
   },
   {
     id: '4x5',
     rows: 5,
     columns: 5,
-    name: 'Hard'
+    name: 'Hard',
+    name_nb: 'Vanskelig'
   },
   {
     id: '6x6',
     rows: 6,
     columns: 6,
-    name: 'Expert'
+    name: 'Expert',
+    name_nb: 'Ekspert'
   }
 ]
 
 const availableCards = {
-  'animals': ['Lion', 'Tiger', 'Elephant', 'Giraffe', 'Bear', 'Zebra', 'Panda', 'Kangaroo', 'Monkey', 'Wolf', 'Dog', 'Cow', 'Fish', 'Horse', 'Sheep', 'Snake',],
+  'animals': {
+    type: 'animals',
+    name: 'Animals',
+    name_nb: 'Dyr',
+    'cards': ['Lion', 'Tiger', 'Elephant', 'Giraffe', 'Bear', 'Zebra', 'Panda', 'Kangaroo', 'Monkey', 'Wolf', 'Dog', 'Cow', 'Fish', 'Horse', 'Sheep', 'Snake',]
+  },
 
-
+/* 
   'fruits': ['Apple', 'Banana', 'Orange', 'Mango', 'Grapes', 'Pineapple', 'Strawberry', 'Cherry', 'Peach', 'Pear'],
-  'numbers': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
-  'letters': ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 
+  'numbers': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'], */
+  'letters': {
+    type: 'letters',
+    name: 'Letters',
+    name_nb: 'Bokstaver',
+    cards: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', ]
+  }
   //'W', 'X', 'Y', 'Z', 'Æ', 'Ø', 'Å'
-  ]
+  
 };
 
-const availableCardTypes = Object.keys(availableCards);
+const availableCardTypes = availableCards;
 
 const generateAndShuffleCards = (type, sizeId) => {
   // Extract rows and columns from the sizeId, e.g., '4x4' -> [4, 4]
@@ -235,12 +251,12 @@ const generateAndShuffleCards = (type, sizeId) => {
   const totalCards = rows * columns;
 
   // Ensure there are enough unique cards for the chosen type
-  if (availableCards[type].length < totalCards / 2) {
+  if (availableCardTypes[type]?.cards.length < totalCards / 2) {
     throw new Error('Not enough unique cards for the selected board size');
   }
 
   // Randomly select unique cards for the game
-  const selectedCards = shuffleArray(availableCards[type]).slice(0, totalCards / 2);
+  const selectedCards = shuffleArray(availableCards[type]?.cards).slice(0, totalCards / 2);
 
   // Convert each card name to an object with name and revealed properties
   let gameCards = selectedCards.map(name => ({ name, revealed: false }));
