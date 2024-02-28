@@ -1,37 +1,43 @@
 <template >
-  <div class="new-game-form" v-if="gameState">
+  <div class="new-game-form " v-if="gameState">
 
+    <div class="game-options flex flex-col gap-4 text-center w-full" v-if="mode === 'new-game'">
 
-    <div class="game-options flex flex-col items-center gap-4 text-center" v-if="mode === 'new-game'">
-
-      <div>
+      <div class="">
         <label class="block" for="name">Navn:</label>
-        <input :style="{
-          width: playerNameInputWidth,
-        }"
-          name="name" v-model="playerName">
+        <input class="text-xl p-3 px-4 max-w-sm w-full rounded" name="name" v-model="playerName">
       </div>
 
       <div>
         <label class="block" for="card-type">Type kort:</label>
-        <select id="card-type" v-model="cardType">
+        <select class="text-xl p-3 px-4 max-w-sm w-full rounded" id="card-type" v-model="cardType">
           <option v-for="ct in availableCardTypes" :value="ct.type" :selected="ct.type === cardType">{{ ct.name_nb }}</option>
         </select>
       </div>
       <div>
         <label class="block" for="board-size">Vanskelighetsgrad:</label>
-        <select id="board-size" v-model="boardSizeId">
+        <select class="text-xl p-3 px-4 max-w-sm w-full rounded" id="board-size" v-model="boardSizeId">
           <option v-for="board in boardSizeOptions" :value="board.id" :selected="board.id === boardSizeId">{{ board.name_nb }}</option>
         </select>
       </div>
-      <div>
-        <label class="block" for="gfx">Lyder:</label>
-        <input type="checkbox" id="gfx" v-model="gfxOn">
+      <div class="text-xl  max-w-sm w-full  mx-auto flex justify-start gap-4 items-center">
+
+        <input class="flex-0 w-8 h-8 " type="checkbox" id="gfx" v-model="gfxOn">
+        <label class="w-full flex-1 flex" for="gfx">
+          <template v-if="gfxOn">Lyd på</template>
+          <template v-else>Lyd av</template>
+
+        </label>
       </div>
-      <div>
-        <label class="block" for="music">Musikk:</label>
-        <input type="checkbox" id="music" v-model="musicOn">
-        </div>
+      <div class="text-xl  max-w-sm w-full  mx-auto flex justify-start gap-4">
+
+        <input class="flex-0 w-8 h-8" type="checkbox" id="music" v-model="musicOn">
+        <label class="w-full flex-1 flex" for="music">
+          <template v-if="musicOn">Musikk på</template>
+          <template v-else>Musikk av</template>
+
+        </label>
+      </div>
     </div>
 
     <div class="buttons">
@@ -87,7 +93,7 @@ function startGame() {
 }
 
 const playerNameInputWidth = computed(() => {
-  return `${playerName.value.length * 0.5}rem`;
+  return `${playerName.value.length * .85}rem`;
 });
 
 function gotoBoardOptions() {
@@ -103,10 +109,5 @@ function gotoBoardOptions() {
   align-items: center;
   justify-content: center;
   margin: 2rem;
-}
-
-.new-game-form input {
-  width: 100%;
-  min-width: 100px;
 }
 </style>  

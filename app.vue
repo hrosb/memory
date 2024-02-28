@@ -531,6 +531,7 @@ body {
 }
 
 .button-wrapper .button {
+
   color: white;
   font-family: Helvetica, sans-serif;
   font-weight: bold;
