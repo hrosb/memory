@@ -3,6 +3,7 @@
 
     <NewGameForm :game-state="gameState" mode="new-game" v-if="!gameIsOngoing" :availableCardTypes="availableCardTypes" :boardSizeOptions="boardSizeOptions" @startGame="startGame" />
 
+    <div class="p-4">
     <GameBoard
       :cards="gameState.cards"
       :boardSizeId="boardSizeId"
@@ -12,6 +13,7 @@
       v-if="gameIsOngoing">
 
     </GameBoard>
+  </div>
 
     <div class="current-score" v-if="gameIsOngoing">
       <p>Time: {{ gameState.elapsedTime }}s</p>
