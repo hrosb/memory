@@ -1,5 +1,5 @@
 <template>
-<div class="game-board mx-auto" ref="gameBoard"  :style="{ ...gridTemplate, 'max-width': gameBoardMaxWidth }">
+  <div class="game-board" ref="gameBoard" :style="{ ...gridTemplate, width: gameBoardWidth }">
     <div v-for="(card, index) in cards" :key="index" class="card" :class="{ 'revealed': card.revealed }" @click="handleCardClick(index)" :style="cardSize">
             <span v-if="cardType !== 'animals'" :class="{ 'hidden': !card.revealed }">{{ card.name }}</span>
       <img v-else :class="{ 'hidden': !card.revealed }" :src="`/images/${card.name.toLowerCase()}.png`">
@@ -38,21 +38,30 @@ const cardSize = ref({ width: '100px', height: '100px' }); // Default card size
 const calculateCardSize = () => {
   const [rows, cols] = props.gameState.boardSizeId.split('x').map(Number);
   const { innerWidth: windowWidth, innerHeight: windowHeight } = window;
-  const safeMargin = 20; // Adjust safe margin as needed
-
-  const availableWidth = windowWidth - safeMargin;
-  const availableHeight = windowHeight - safeMargin;
+  const margin = 20; // Equal margin on both sides
   
-  const gapSize = 10; // Gap size in pixels
-  const maxCardWidth = (availableWidth - gapSize * (cols - 1)) / cols;
-  const maxCardHeight = (availableHeight - gapSize * (rows - 1)) / rows;
+  // Subtract total margin (left + right) from available width
+  const availableWidth = windowWidth - (margin * 2);
+  const availableHeight = windowHeight - (margin * 2);
+  
+  const gapSize = 10;
+  const totalGapWidth = gapSize * (cols - 1);
+  
+  // Calculate card size considering gaps
+  const maxCardWidth = (availableWidth - totalGapWidth) / cols;
+  const maxCardHeight = (availableHeight - (gapSize * (rows - 1))) / rows;
+  
   const size = Math.min(maxCardWidth, maxCardHeight);
-
+  
+  // Calculate exact board width including gaps
+  const exactBoardWidth = (size * cols) + totalGapWidth;
+  
   cardSize.value = { width: `${size}px`, height: `${size}px` };
-  gameBoardMaxWidth.value = `${Math.min(availableWidth, (size * cols + gapSize * (cols - 1)))}px`; // Ensure game board does not exceed the available width
+  gameBoardWidth.value = `${exactBoardWidth}px`;
 };
 
-const gameBoardMaxWidth = ref('100%');
+// Change from maxWidth to width for more precise control
+const gameBoardWidth = ref('auto');
 
 
 onMounted(() => {
@@ -64,3 +73,13 @@ onUnmounted(() => {
   window.removeEventListener('resize', calculateCardSize);
 });
 </script>
+
+<style scoped>
+.game-board {
+  display: grid;
+  gap: 10px;
+  margin: 0 auto; /* Center the board */
+  justify-content: center;
+  align-items: center;
+}
+</style>

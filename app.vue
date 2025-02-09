@@ -35,7 +35,9 @@
     <Modal v-if="showResultModal" @closeModal="handleModalClose">
       <div class="result-modal">
         <div class="result-modal-content">
-          <h2 class="result-title">Game Complete!</h2>
+          <h2 class="result-title">
+            {{ currentGameScoreBoardReactive.some(s => s.isNew) ? 'Game Complete!' : 'Almost There!' }}
+          </h2>
           
           <div class="result-stats">
             <div class="stat-item">
@@ -48,7 +50,8 @@
             </div>
           </div>
 
-          <div class="scoreboard">
+          <!-- Show either scoreboard or encouragement -->
+          <div v-if="currentGameScoreBoardReactive.some(s => s.isNew)" class="scoreboard">
             <h3>Top Scores</h3>
             <ul class="score-list">
               <li v-for="(score, index) in currentGameScoreBoardReactive" 
@@ -61,9 +64,16 @@
               </li>
             </ul>
           </div>
+          <div v-else class="encouragement">
+            <p class="encouragement-message">{{ randomEncouragement }}</p>
+            <div class="current-stats">
+              <p>Your Time: {{ gameState.elapsedTime }}s</p>
+              <p>Your Accuracy: {{ currentAccuracy }}%</p>
+            </div>
+          </div>
 
           <div class="result-actions">
-            <button class="result-button result-button--secondary" @click="hideHighScoreModal">
+            <button class="result-button result-button--secondary" @click="returnToMenu">
               Menu
             </button>
             <button class="result-button result-button--primary" @click="restartGame">
@@ -420,7 +430,19 @@ const checkForMatch = () => {
   return clickIsMatch;
 };
 
+const encouragementMessages = [
+  "Nice try, but these high scores are tougher than a two-dollar steak! 🥩",
+  "Close, but no banana! 🍌 The top players have been practicing since the Stone Age.",
+  "Well, at least you didn't break your keyboard! 😅 Want another shot?",
+  "The good news: you completed the game! The bad news: the high scores are being difficult. 🎮",
+  "Even Einstein had to practice! (But he probably would've gotten a high score) 🧠",
+  "You're getting better! The high scores are just playing hard to get. 💫",
+  "Remember: every master was once a beginner! (Except maybe these high score holders) 🌟"
+];
 
+const randomEncouragement = computed(() => 
+  encouragementMessages[Math.floor(Math.random() * encouragementMessages.length)]
+);
 
 const updateScoreBoard = () => {
   const finalScore = {
@@ -478,6 +500,8 @@ const updateScoreBoard = () => {
     storedScoreBoard[scoreKey] = storedScoreBoard[scoreKey].map(score => {
       return score.uuid === newScore.uuid ? newScore : score;
     });
+  } else {
+    showEncouragementModal();
   }
 
   // Check if the player's score is in the top 10
@@ -508,6 +532,11 @@ function handleModalClose() {
   // Don't stop the game here, let user see their score and retry options
 }
 
+const showEncouragementModal = () => {
+  gameState.gameCompleted = true;
+  highScoreModalVisible.value = true;
+};
+
 const currentAccuracy = computed(() => {
   const totalAttempts = gameState.hits + gameState.misses;
   return totalAttempts > 0 ? ((gameState.hits / totalAttempts) * 100).toFixed(2) : 0;
@@ -518,6 +547,10 @@ function gotoNewGameForm () {
   clearInterval(intervalId);
 }
 
+function returnToMenu() {
+  hideHighScoreModal();
+  stopCurrentGame();
+}
 
 onUnmounted(() => {
   if (intervalId !== null) {
@@ -800,6 +833,8 @@ body {
 }
 
 .bottom-controls {
+  display: flex;
+  justify-content: center;
   margin: 2rem auto;
   width: 100%;
   max-width: 480px;
@@ -842,5 +877,28 @@ body {
   justify-content: center;
   gap: 1.5rem;
   margin-top: 2rem;
+}
+
+.encouragement {
+  text-align: center;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.encouragement-message {
+  font-size: 1.2rem;
+  color: #2d3748;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+.current-stats {
+  font-size: 1.1rem;
+  color: #4a5568;
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
 }
 </style>
