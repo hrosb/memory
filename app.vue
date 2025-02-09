@@ -110,7 +110,7 @@ import alfabetet from '../assets/sounds/norwegian-letter-sounds/alfabetlyder_01.
 
 
 
-const { play: startGameSound, isPlaying: gameSoundIsPlaying } = useSound(gameMusic, { volume: 0.3 })
+const { play: startGameSound, isPlaying: gameSoundIsPlaying, stop: stopGameMusic } = useSound(gameMusic, { volume: 0.3 })
 const { play: clickSound } = useSound(buttonSfx)
 const { play: correctSound } = useSound(correctSoundGfx);
 
@@ -173,6 +173,7 @@ function stopCurrentGame () {
   gameState.currentGame.started = false;
   highScoreModalVisible.value = false;
   clearInterval(intervalId);
+  stopGameMusic(); // Add this line to stop music when stopping game
 }
 const cardType = ref('animals');
 const boardSizeId = ref('2x2');
@@ -199,8 +200,11 @@ function startGame (gameOptions) {
 
   console.log(gameOptions);
 
-  if (!gameSoundIsPlaying.value && gameOptions.musicOn) {
+  // Handle music control
+  if (gameOptions.musicOn && !gameSoundIsPlaying.value) {
     startGameSound();
+  } else if (!gameOptions.musicOn && gameSoundIsPlaying.value) {
+    stopGameMusic();
   }
 
   if (gameOptions.playerName) {
