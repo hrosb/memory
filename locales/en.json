@@ -1,0 +1,38 @@
+{
+  "game": {
+    "newGame": "New Game",
+    "tryAgain": "Try Again",
+    "menu": "Menu",
+    "playAgain": "Play Again",
+    "back": "Back",
+    "startGame": "Start Game",
+    "nameInput": "Name (optional)",
+    "namePlaceholder": "Enter your name",
+    "cardType": "Card Type",
+    "difficulty": "Difficulty",
+    "soundOn": "Sound On",
+    "soundOff": "Sound Off",
+    "musicOn": "Music On",
+    "musicOff": "Music Off"
+  },
+  "score": {
+    "time": "Time",
+    "accuracy": "Accuracy",
+    "topScores": "Top Scores",
+    "yourTime": "Your Time",
+    "yourAccuracy": "Your Accuracy"
+  },
+  "results": {
+    "gameComplete": "Game Complete!",
+    "almostThere": "Almost There!"
+  },
+  "encouragement": [
+    "Nice try, but these high scores are tougher than a two-dollar steak! 🥩",
+    "Close, but no banana! 🍌 The top players have been practicing since the Stone Age.",
+    "Well, at least you didn't break your keyboard! 😅 Want another shot?",
+    "The good news: you completed the game! The bad news: the high scores are being difficult. 🎮",
+    "Even Einstein had to practice! (But he probably would've gotten a high score) 🧠",
+    "You're getting better! The high scores are just playing hard to get. 💫",
+    "Remember: every master was once a beginner! (Except maybe these high score holders) 🌟"
+  ]
+}

@@ -3,27 +3,27 @@
        :class="{ 'form-entering': showForm }"
        :data-mode="props.mode">
     <div class="form-header">
-      <h2 class="form-title">{{ mode === 'retry' ? 'Try Again' : 'New Game' }}</h2>
+      <h2 class="form-title">{{ mode === 'retry' ? t('game.tryAgain') : t('game.newGame') }}</h2>
     </div>
 
     <div class="game-options" v-if="mode === 'new-game'">
       <!-- Simplified name input without validation -->
       <div class="form-group">
-        <label class="form-label" for="name">Name (optional)</label>
+        <label class="form-label" for="name">{{ t('game.nameInput') }}</label>
         <div class="input-wrapper">
           <input 
             class="form-input"
             name="name" 
             v-model="playerName"
             maxlength="20"
-            placeholder="Enter your name"
+            :placeholder="t('game.namePlaceholder')"
           >
         </div>
       </div>
 
       <!-- Card Type Selection -->
       <div class="form-group">
-        <label class="form-label" for="card-type">Card Type</label>
+        <label class="form-label" for="card-type">{{ t('game.cardType') }}</label>
         <div class="select-wrapper">
           <select class="form-select" id="card-type" v-model="cardType">
             <option v-for="ct in availableCardTypes" 
@@ -37,7 +37,7 @@
 
       <!-- Difficulty Selection -->
       <div class="form-group">
-        <label class="form-label" for="board-size">Difficulty</label>
+        <label class="form-label" for="board-size">{{ t('game.difficulty') }}</label>
         <div class="select-wrapper">
           <select class="form-select" id="board-size" v-model="boardSizeId">
             <option v-for="board in boardSizeOptions" 
@@ -55,7 +55,7 @@
           <label class="toggle-label">
             <input type="checkbox" v-model="audioSettings.gfx">
             <span class="toggle-switch"></span>
-            <span class="toggle-text">{{ audioSettings.gfx ? 'Sound On' : 'Sound Off' }}</span>
+            <span class="toggle-text">{{ audioSettings.gfx ? t('game.soundOn') : t('game.soundOff') }}</span>
           </label>
         </div>
 
@@ -63,7 +63,7 @@
           <label class="toggle-label">
             <input type="checkbox" v-model="audioSettings.music">
             <span class="toggle-switch"></span>
-            <span class="toggle-text">{{ audioSettings.music ? 'Music On' : 'Music Off' }}</span>
+            <span class="toggle-text">{{ audioSettings.music ? t('game.musicOn') : t('game.musicOff') }}</span>
           </label>
         </div>
       </div>
@@ -75,14 +75,14 @@
               class="action-button secondary"
               @click="gotoBoardOptions">
         <span class="button-icon">←</span>
-        Back
+        {{ t('game.back') }}
       </button>
       
       <button class="action-button primary"
               @click="startGame"
               :disabled="props.mode === 'new-game' && !formState.isValid">
         <span v-if="isLoading" class="loader"></span>
-        <span v-else>{{ props.mode === 'retry' ? 'Try Again' : 'Start Game' }}</span>
+        <span v-else>{{ props.mode === 'retry' ? t('game.tryAgain') : t('game.startGame') }}</span>
       </button>
     </div>
   </div>
@@ -91,6 +91,8 @@
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted } from 'vue';
 import { useLocalStorage } from '@vueuse/core';
+import { useI18n } from '../composables/useI18n'
+const { t } = useI18n()
 
 interface AudioSettings {
   gfx: boolean;

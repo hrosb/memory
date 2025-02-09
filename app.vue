@@ -1,5 +1,17 @@
 <template>
   <div class="game-container">
+    <div class="language-switcher">
+      <button 
+        @click="setLocale('en')" 
+        :class="{ 'active': locale === 'en' }"
+        class="lang-btn"
+      >EN</button>
+      <button 
+        @click="setLocale('nb')" 
+        :class="{ 'active': locale === 'nb' }"
+        class="lang-btn"
+      >NO</button>
+    </div>
 
     <NewGameForm :game-state="gameState" mode="new-game" v-if="!gameState.currentGame.started" :availableCardTypes="availableCardTypes" :boardSizeOptions="boardSizeOptions" @startGame="startGame" />
 
@@ -14,8 +26,8 @@
       </GameBoard>
 
       <div class="current-score" v-if="gameIsOngoing">
-        <p>Time: {{ gameState.elapsedTime }}s</p>
-        <p>Accuracy: {{ currentAccuracy }}%</p>
+        <p>{{ t('score.time') }}: {{ gameState.elapsedTime }}s</p>
+        <p>{{ t('score.accuracy') }}: {{ currentAccuracy }}%</p>
       </div>
 
       <!-- Changed: Static retry section -->
@@ -36,23 +48,23 @@
       <div class="result-modal">
         <div class="result-modal-content">
           <h2 class="result-title">
-            {{ currentGameScoreBoardReactive.some(s => s.isNew) ? 'Game Complete!' : 'Almost There!' }}
+            {{ currentGameScoreBoardReactive.some(s => s.isNew) ? t('results.gameComplete') : t('results.almostThere') }}
           </h2>
           
           <div class="result-stats">
             <div class="stat-item">
-              <span class="stat-label">Time</span>
+              <span class="stat-label">{{ t('score.time') }}</span>
               <span class="stat-value">{{ gameState.elapsedTime }}s</span>
             </div>
             <div class="stat-item">
-              <span class="stat-label">Accuracy</span>
+              <span class="stat-label">{{ t('score.accuracy') }}</span>
               <span class="stat-value">{{ currentAccuracy }}%</span>
             </div>
           </div>
 
           <!-- Show either scoreboard or encouragement -->
           <div v-if="currentGameScoreBoardReactive.some(s => s.isNew)" class="scoreboard">
-            <h3>Top Scores</h3>
+            <h3>{{ t('score.topScores') }}</h3>
             <ul class="score-list">
               <li v-for="(score, index) in currentGameScoreBoardReactive" 
                   :key="index" 
@@ -65,19 +77,19 @@
             </ul>
           </div>
           <div v-else class="encouragement">
-            <p class="encouragement-message">{{ randomEncouragement }}</p>
+            <p class="encouragement-message">{{ t('encouragement')[Math.floor(Math.random() * t('encouragement').length)] }}</p>
             <div class="current-stats">
-              <p>Your Time: {{ gameState.elapsedTime }}s</p>
-              <p>Your Accuracy: {{ currentAccuracy }}%</p>
+              <p>{{ t('score.yourTime') }}: {{ gameState.elapsedTime }}s</p>
+              <p>{{ t('score.yourAccuracy') }}: {{ currentAccuracy }}%</p>
             </div>
           </div>
 
           <div class="result-actions">
             <button class="result-button result-button--secondary" @click="returnToMenu">
-              Menu
+              {{ t('game.menu') }}
             </button>
             <button class="result-button result-button--primary" @click="restartGame">
-              Play Again
+              {{ t('game.playAgain') }}
             </button>
           </div>
         </div>
@@ -108,7 +120,8 @@ import gameMusic from '../assets/sounds/music.mp3'
 
 import alfabetet from '../assets/sounds/norwegian-letter-sounds/alfabetlyder_01.mp3';
 
-
+import { useI18n } from './composables/useI18n'
+const { t, setLocale, locale } = useI18n()
 
 const { play: startGameSound, isPlaying: gameSoundIsPlaying, stop: stopGameMusic } = useSound(gameMusic, { volume: 0.3 })
 const { play: clickSound } = useSound(buttonSfx)
@@ -904,5 +917,37 @@ body {
   display: flex;
   justify-content: center;
   gap: 2rem;
+}
+
+.language-switcher {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  display: flex;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.5rem;
+  border-radius: 8px;
+  backdrop-filter: blur(8px);
+}
+
+.lang-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.lang-btn:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.lang-btn.active {
+  background: #4299e1;
+  color: white;
 }
 </style>

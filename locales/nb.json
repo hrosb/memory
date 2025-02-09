@@ -1,0 +1,38 @@
+{
+  "game": {
+    "newGame": "Nytt Spill",
+    "tryAgain": "Prøv Igjen",
+    "menu": "Meny",
+    "playAgain": "Spill Igjen",
+    "back": "Tilbake",
+    "startGame": "Start Spill",
+    "nameInput": "Navn (valgfritt)",
+    "namePlaceholder": "Skriv inn navn",
+    "cardType": "Korttype",
+    "difficulty": "Vanskelighetsgrad",
+    "soundOn": "Lyd På",
+    "soundOff": "Lyd Av",
+    "musicOn": "Musikk På",
+    "musicOff": "Musikk Av"
+  },
+  "score": {
+    "time": "Tid",
+    "accuracy": "Nøyaktighet",
+    "topScores": "Toppscore",
+    "yourTime": "Din Tid",
+    "yourAccuracy": "Din Nøyaktighet"
+  },
+  "results": {
+    "gameComplete": "Spill Fullført!",
+    "almostThere": "Nesten hjelper ingen på listen!"
+  },
+"encouragement": [
+    "Bra forsøk, men disse rekordene er seigere enn tørrfisk i en vinterstorm! 🥩",
+    "Nesten, men ikke helt! De beste spillerne har tydeligvis trent siden dinosaurene vandret på jorda. 🦖",
+    "Vel, i det minste overlevde tastaturet! Skal vi prøve igjen? 😅",
+    "Gode nyheter: du kom i mål! Dårlige nyheter: rekordene er fortsatt knallharde å slå. 🎮",
+    "Til og med Einstein måtte øve – selv om han sikkert hadde fått en kosmisk høy score. 🧠",
+    "Du blir bedre! Disse rekordene er bare litt mer tverre enn en hissig elg. 💫",
+    "Husk: alle mestere startet som nybegynnere (med mulig unntak av disse rekordholderne). 🌟"
+  ]
+}
