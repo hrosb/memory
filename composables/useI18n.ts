@@ -5,15 +5,20 @@ import nb from '../locales/nb.json'
 const translations = { en, nb }
 
 export function useI18n() {
-  const currentLocale = ref('en') // Default to 'en'
-
-  // Only access localStorage on client side
-  if (process.client) {
-    const stored = localStorage.getItem('locale')
-    if (stored) {
-      currentLocale.value = stored
+  // Change default locale detection
+  const getInitialLocale = () => {
+    if (process.client) {
+      const stored = localStorage.getItem('locale')
+      if (stored) return stored
+      
+      // Check browser language
+      const browserLang = navigator.language.toLowerCase()
+      return browserLang.startsWith('nb') ? 'nb' : 'en'
     }
+    return 'en'
   }
+
+  const currentLocale = ref(getInitialLocale())
 
   const t = (key: string) => {
     const keys = key.split('.')

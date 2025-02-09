@@ -69,19 +69,19 @@
       </div>
     </div>
 
-    <!-- Add language switcher at the bottom -->
+    <!-- Replace language switcher markup -->
     <div class="language-switcher" v-if="mode === 'new-game'">
-      <label class="language-label">{{ t('game.language') }}</label>
+      <label class="form-label">{{ t('game.language') }}</label>
       <div class="language-buttons">
         <button 
+          type="button"
           @click="setLocale('en')" 
-          :class="{ 'active': locale === 'en' }"
-          class="lang-btn"
+          :class="['lang-btn', { 'active': locale === 'en' }]"
         >English</button>
         <button 
+          type="button"
           @click="setLocale('nb')" 
-          :class="{ 'active': locale === 'nb' }"
-          class="lang-btn"
+          :class="['lang-btn', { 'active': locale === 'nb' }]"
         >Norsk</button>
       </div>
     </div>
@@ -399,42 +399,39 @@ input[type="checkbox"]:checked + .toggle-switch:before {
   max-width: 360px;
 }
 
+/* Replace language switcher styles */
 .language-switcher {
   margin-top: 2rem;
   padding-top: 1.5rem;
-  border-top: 1px solid rgba(0,0,0,0.1);
-  text-align: center;
-}
-
-.language-label {
-  display: block;
-  font-size: 0.9rem;
-  color: #4a5568;
-  margin-bottom: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .language-buttons {
   display: flex;
-  justify-content: center;
   gap: 0.5rem;
 }
 
 .lang-btn {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.05);
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  color: #4a5568;
+  font-size: 0.9rem;
   cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
 }
 
 .lang-btn:hover {
-  background: rgba(0, 0, 0, 0.1);
+  border-color: #4299e1;
+  color: #4299e1;
 }
 
 .lang-btn.active {
-  background: #4299e1;
-  color: white;
+  background: #f7fafc;
+  border-color: #4299e1;
+  color: #2d3748;
+  font-weight: 500;
 }
 </style>

@@ -906,18 +906,6 @@ body {
   gap: 2rem;
 }
 
-.language-switcher {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  z-index: 1000;
-  display: flex;
-  gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.2);
-  padding: 0.5rem;
-  border-radius: 8px;
-  backdrop-filter: blur(8px);
-}
 
 .lang-btn {
   padding: 0.5rem 1rem;
