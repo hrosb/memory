@@ -13,7 +13,8 @@
     "soundOn": "Lyd På",
     "soundOff": "Lyd Av",
     "musicOn": "Musikk På",
-    "musicOff": "Musikk Av"
+    "musicOff": "Musikk Av",
+    "language": "Språk"
   },
   "score": {
     "time": "Tid",
@@ -26,7 +27,7 @@
     "gameComplete": "Spill Fullført!",
     "almostThere": "Nesten hjelper ingen på listen!"
   },
-"encouragement": [
+  "encouragement": [
     "Bra forsøk, men disse rekordene er seigere enn tørrfisk i en vinterstorm! 🥩",
     "Nesten, men ikke helt! De beste spillerne har tydeligvis trent siden dinosaurene vandret på jorda. 🦖",
     "Vel, i det minste overlevde tastaturet! Skal vi prøve igjen? 😅",

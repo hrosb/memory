@@ -13,7 +13,8 @@
     "soundOn": "Sound On",
     "soundOff": "Sound Off",
     "musicOn": "Music On",
-    "musicOff": "Music Off"
+    "musicOff": "Music Off",
+    "language": "Language"
   },
   "score": {
     "time": "Time",

@@ -69,6 +69,23 @@
       </div>
     </div>
 
+    <!-- Add language switcher at the bottom -->
+    <div class="language-switcher" v-if="mode === 'new-game'">
+      <label class="language-label">{{ t('game.language') }}</label>
+      <div class="language-buttons">
+        <button 
+          @click="setLocale('en')" 
+          :class="{ 'active': locale === 'en' }"
+          class="lang-btn"
+        >English</button>
+        <button 
+          @click="setLocale('nb')" 
+          :class="{ 'active': locale === 'nb' }"
+          class="lang-btn"
+        >Norsk</button>
+      </div>
+    </div>
+
     <!-- Action Buttons -->
     <div class="form-actions">
       <button v-if="mode === 'retry'"
@@ -92,7 +109,7 @@
 import { ref, computed, reactive, onMounted } from 'vue';
 import { useLocalStorage } from '@vueuse/core';
 import { useI18n } from '../composables/useI18n'
-const { t } = useI18n()
+const { t, setLocale, locale } = useI18n()
 
 interface AudioSettings {
   gfx: boolean;
@@ -380,5 +397,44 @@ input[type="checkbox"]:checked + .toggle-switch:before {
 [data-mode="retry"] {
   transform: scale(0.8);
   max-width: 360px;
+}
+
+.language-switcher {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.language-label {
+  display: block;
+  font-size: 0.9rem;
+  color: #4a5568;
+  margin-bottom: 0.75rem;
+}
+
+.language-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.lang-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.lang-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.lang-btn.active {
+  background: #4299e1;
+  color: white;
 }
 </style>

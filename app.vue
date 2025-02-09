@@ -1,18 +1,5 @@
 <template>
   <div class="game-container">
-    <div class="language-switcher">
-      <button 
-        @click="setLocale('en')" 
-        :class="{ 'active': locale === 'en' }"
-        class="lang-btn"
-      >EN</button>
-      <button 
-        @click="setLocale('nb')" 
-        :class="{ 'active': locale === 'nb' }"
-        class="lang-btn"
-      >NO</button>
-    </div>
-
     <NewGameForm :game-state="gameState" mode="new-game" v-if="!gameState.currentGame.started" :availableCardTypes="availableCardTypes" :boardSizeOptions="boardSizeOptions" @startGame="startGame" />
 
     <div class="game-content">
