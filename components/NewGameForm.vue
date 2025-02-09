@@ -1,95 +1,158 @@
-<template >
-  <div class="new-game-form " v-if="gameState">
+<template>
+  <div class="new-game-form" 
+       :class="{ 'form-entering': showForm }"
+       :data-mode="props.mode">
+    <div class="form-header">
+      <h2 class="form-title">{{ mode === 'retry' ? 'Try Again' : 'New Game' }}</h2>
+    </div>
 
-    <div class="game-options flex flex-col gap-4 text-center w-full" v-if="mode === 'new-game'">
-
-      <div class="">
-        <label class="block" for="name">Navn:</label>
-        <input class="text-xl p-3 px-4 max-w-sm w-full rounded" name="name" v-model="playerName">
+    <div class="game-options" v-if="mode === 'new-game'">
+      <!-- Simplified name input without validation -->
+      <div class="form-group">
+        <label class="form-label" for="name">Name (optional)</label>
+        <div class="input-wrapper">
+          <input 
+            class="form-input"
+            name="name" 
+            v-model="playerName"
+            maxlength="20"
+            placeholder="Enter your name"
+          >
+        </div>
       </div>
 
-      <div>
-        <label class="block" for="card-type">Type kort:</label>
-        <select class="text-xl p-3 px-4 max-w-sm w-full rounded" id="card-type" v-model="cardType">
-          <option v-for="ct in availableCardTypes" :value="ct.type" :selected="ct.type === cardType">{{ ct.name_nb }}</option>
-        </select>
+      <!-- Card Type Selection -->
+      <div class="form-group">
+        <label class="form-label" for="card-type">Card Type</label>
+        <div class="select-wrapper">
+          <select class="form-select" id="card-type" v-model="cardType">
+            <option v-for="ct in availableCardTypes" 
+                    :key="ct.type" 
+                    :value="ct.type">
+              {{ ct.name_nb }}
+            </option>
+          </select>
+        </div>
       </div>
-      <div>
-        <label class="block" for="board-size">Vanskelighetsgrad:</label>
-        <select class="text-xl p-3 px-4 max-w-sm w-full rounded" id="board-size" v-model="boardSizeId">
-          <option v-for="board in boardSizeOptions" :value="board.id" :selected="board.id === boardSizeId">{{ board.name_nb }}</option>
-        </select>
+
+      <!-- Difficulty Selection -->
+      <div class="form-group">
+        <label class="form-label" for="board-size">Difficulty</label>
+        <div class="select-wrapper">
+          <select class="form-select" id="board-size" v-model="boardSizeId">
+            <option v-for="board in boardSizeOptions" 
+                    :key="board.id" 
+                    :value="board.id">
+              {{ board.name_nb }}
+            </option>
+          </select>
+        </div>
       </div>
-      <div class="text-xl  max-w-sm w-full  mx-auto flex justify-start gap-4 items-center">
 
-        <input class="flex-0 w-8 h-8 " type="checkbox" id="gfx" v-model="gfxOn">
-        <label class="w-full flex-1 flex" for="gfx">
-          <template v-if="gfxOn">Lyd på</template>
-          <template v-else>Lyd av</template>
+      <!-- Sound Options -->
+      <div class="sound-options">
+        <div class="toggle-option">
+          <label class="toggle-label">
+            <input type="checkbox" v-model="audioSettings.gfx">
+            <span class="toggle-switch"></span>
+            <span class="toggle-text">{{ audioSettings.gfx ? 'Sound On' : 'Sound Off' }}</span>
+          </label>
+        </div>
 
-        </label>
-      </div>
-      <div class="text-xl  max-w-sm w-full  mx-auto flex justify-start gap-4">
-
-        <input class="flex-0 w-8 h-8" type="checkbox" id="music" v-model="musicOn">
-        <label class="w-full flex-1 flex" for="music">
-          <template v-if="musicOn">Musikk på</template>
-          <template v-else>Musikk av</template>
-
-        </label>
+        <div class="toggle-option">
+          <label class="toggle-label">
+            <input type="checkbox" v-model="audioSettings.music">
+            <span class="toggle-switch"></span>
+            <span class="toggle-text">{{ audioSettings.music ? 'Music On' : 'Music Off' }}</span>
+          </label>
+        </div>
       </div>
     </div>
 
-    <div class="buttons">
-
-      <div class="button-wrapper" v-if="mode === 'retry'">
-        <button class="button button--white" @click="gotoBoardOptions"><span><svg enable-background="new 0 0 32 32" height="32px" id="Layer_1" version="1.1" viewBox="0 0 32 32" width="32px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-
-              <g fill="#ffffff">
-                <g>
-                  <path d="M29.018,17H2.982c-0.397,0-0.756-0.244-0.908-0.617c-0.152-0.374-0.068-0.804,0.213-1.09l11.789-12    c0.384-0.391,1.005-0.391,1.389,0s0.384,1.023,0,1.414L5.354,15h23.663C29.561,15,30,15.448,30,16S29.561,17,29.018,17z" />
-                </g>
-                <g>
-                  <path d="M14.772,29c-0.251,0-0.503-0.098-0.695-0.293l-7.86-8c-0.384-0.391-0.384-1.023,0-1.414s1.005-0.391,1.389,0l7.86,8    c0.384,0.391,0.384,1.023,0,1.414C15.275,28.902,15.023,29,14.772,29z" />
-                </g>
-              </g>
-            </svg></span></button>
-      </div>
-
-      <div class="button-wrapper">
-        <button class="button" @click="startGame">
-          <span>
-            <template v-if="mode !== 'retry'">Nytt spill</template>
-            <template v-if="mode === 'retry'">Prøv igjen</template>
-          </span></button>
-      </div>
+    <!-- Action Buttons -->
+    <div class="form-actions">
+      <button v-if="mode === 'retry'"
+              class="action-button secondary"
+              @click="gotoBoardOptions">
+        <span class="button-icon">←</span>
+        Back
+      </button>
+      
+      <button class="action-button primary"
+              @click="startGame"
+              :disabled="props.mode === 'new-game' && !formState.isValid">
+        <span v-if="isLoading" class="loader"></span>
+        <span v-else>{{ props.mode === 'retry' ? 'Try Again' : 'Start Game' }}</span>
+      </button>
     </div>
-
   </div>
 </template>
 
-
 <script setup lang="ts">
+import { ref, computed, reactive, onMounted } from 'vue';
 import { useLocalStorage } from '@vueuse/core';
 
+interface AudioSettings {
+  gfx: boolean;
+  music: boolean;
+}
+
+interface CardType {
+  type: string;
+  name: string;
+  name_nb: string;
+  cards: string[];
+}
 
 const props = defineProps<{
-  availableCardTypes: string[]
-  boardSizeOptions: { id: number, name: string }[],
-  mode: any,
+  availableCardTypes: CardType[]
+  boardSizeOptions: { id: string; name_nb: string; }[],
+  mode: 'new-game' | 'retry',
   gameState: any,
 }>();
 
 const emit = defineEmits(['startGame', 'gotoBoardOptions']);
 
 const playerName = useLocalStorage('playerName', '');
+const nameError = ref('');
+const isLoading = ref(false);
+const showForm = ref(true); // Changed from false to true
+
 const cardType = ref(props.gameState.cardType);
 const boardSizeId = ref(props.gameState.boardSizeId);
-const gfxOn = ref(true);
-const musicOn = ref(false);
 
-function startGame() {
-  emit('startGame', { cardType: cardType.value, boardSizeId: boardSizeId.value, playerName: props.gameState.playerName ? props.gameState.playerName : playerName.value, gfxOn: gfxOn.value, musicOn: musicOn.value });
+const audioSettings = useLocalStorage<AudioSettings>('audioSettings', {
+  gfx: true,
+  music: false
+});
+
+// Simplified formState
+const formState = reactive({
+  isValid: computed(() => true), // Always valid now
+  isDirty: false
+});
+
+// Force initial validation on mount
+onMounted(() => {
+  showForm.value = true;
+  if (playerName.value) {
+    formState.isDirty = true;
+  }
+});
+
+async function startGame() {
+  isLoading.value = true;
+  try {
+    emit('startGame', {
+      cardType: cardType.value,
+      boardSizeId: boardSizeId.value,
+      playerName: playerName.value || 'Anonymous',
+      gfxOn: audioSettings.value.gfx,
+      musicOn: audioSettings.value.music,
+    });
+  } finally {
+    isLoading.value = false;
+  }
 }
 
 const playerNameInputWidth = computed(() => {
@@ -100,14 +163,220 @@ function gotoBoardOptions() {
   emit('gotoBoardOptions');
 }
 
+onMounted(() => {
+  showForm.value = true;
+  // Validate initial value if exists
+  if (playerName.value) {
+    formState.isDirty = true;
+  }
+});
 </script>
 
-
-<style>
+<style scoped>
 .new-game-form {
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin: 2rem;
+  max-width: 480px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+  backdrop-filter: blur(8px);
+  transform: translateY(10px);
+  opacity: 1; 
+  transition: all 0.3s ease-out;
 }
-</style>  
+
+.form-entering {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.form-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.form-title {
+  font-size: 1.8rem;
+  color: #2d3748;
+  font-weight: 600;
+  margin: 0;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #4a5568;
+  margin-bottom: 0.5rem;
+}
+
+.input-wrapper, .select-wrapper {
+  position: relative;
+}
+
+.form-input, .form-select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.2s;
+  background-color: white;
+}
+
+.form-input:focus, .form-select:focus {
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+  outline: none;
+}
+
+.error {
+  border-color: #fc8181;
+}
+
+.error-message {
+  color: #e53e3e;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.sound-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.toggle-option {
+  display: flex;
+  align-items: center;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 48px;
+  height: 24px;
+  background: #cbd5e0;
+  border-radius: 12px;
+  margin-right: 0.75rem;
+  transition: background 0.3s;
+}
+
+.toggle-switch:before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s;
+}
+
+input[type="checkbox"] {
+  display: none;
+}
+
+input[type="checkbox"]:checked + .toggle-switch {
+  background: #4299e1;
+}
+
+input[type="checkbox"]:checked + .toggle-switch:before {
+  transform: translateX(24px);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.action-button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: none;
+}
+
+.action-button.primary {
+  background: #4299e1;
+  color: white;
+}
+
+.action-button.secondary {
+  background: #718096;
+  color: white;
+}
+
+.action-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.action-button:active {
+  transform: translateY(1px);
+}
+
+.action-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.loader {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255,255,255,.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+@media (max-width: 768px) {
+  .new-game-form {
+    margin: 1rem;
+    padding: 1rem;
+  }
+
+  .form-title {
+    font-size: 1.4rem;
+  }
+
+  .action-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+[data-mode="retry"] {
+  transform: scale(0.8);
+  max-width: 360px;
+}
+</style>

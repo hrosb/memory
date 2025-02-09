@@ -1,53 +1,94 @@
 <template>
-  <div>
+  <div class="game-container">
 
-    <NewGameForm :game-state="gameState" mode="new-game" v-if="!gameIsOngoing" :availableCardTypes="availableCardTypes" :boardSizeOptions="boardSizeOptions" @startGame="startGame" />
+    <NewGameForm :game-state="gameState" mode="new-game" v-if="!gameState.currentGame.started" :availableCardTypes="availableCardTypes" :boardSizeOptions="boardSizeOptions" @startGame="startGame" />
 
-    <div class="p-4">
-    <GameBoard
-      :cards="gameState.cards"
-      :boardSizeId="boardSizeId"
-      :cardType="cardType"
-      @cardClicked="handleCardClick"
-      :game-state="gameState"
-      v-if="gameIsOngoing">
+    <div class="game-content">
+      <GameBoard
+        :cards="gameState.cards"
+        :boardSizeId="boardSizeId"
+        :cardType="cardType"
+        @cardClicked="handleCardClick"
+        :game-state="gameState"
+        v-if="gameIsOngoing">
+      </GameBoard>
 
-    </GameBoard>
-  </div>
+      <div class="current-score" v-if="gameIsOngoing">
+        <p>Time: {{ gameState.elapsedTime }}s</p>
+        <p>Accuracy: {{ currentAccuracy }}%</p>
+      </div>
 
-    <div class="current-score" v-if="gameIsOngoing">
-      <p>Time: {{ gameState.elapsedTime }}s</p>
-      <p>Accuracy: {{ currentAccuracy }}%</p>
+      <!-- Changed: Static retry section -->
+      <div class="bottom-controls" v-if="gameIsOngoing && !gameState.gameCompleted">
+        <NewGameForm 
+          :game-state="gameState" 
+          mode="retry" 
+          @gotoBoardOptions="stopCurrentGame"
+          :availableCardTypes="availableCardTypes" 
+          :boardSizeOptions="boardSizeOptions" 
+          @startGame="restartGame"
+        />
+      </div>
     </div>
 
-    <Modal v-if="highScoreModalVisible" @closeModal="hideHighScoreModal">
-      <div class="score-board-modal-wrapper">
-        <div class="score-board-modal">
-          <div class="score-board-modal-content">
-            <h2>Score Board</h2>
-            <div>
-              <ul>
-                <li v-for="(score, index) in currentGameScoreBoardReactive" :key="index" :class="{ 'new-score': score.isNew }">
-                  {{ index + 1 }} : {{ score.playerName }} : Time: {{ score.timeSpent }}s, Accuracy: {{ (score.accuracy * 100).toFixed(2) }}%
-                </li>
-              </ul>
+    <!-- Updated result modal with new button styles -->
+    <Modal v-if="showResultModal" @closeModal="handleModalClose">
+      <div class="result-modal">
+        <div class="result-modal-content">
+          <h2 class="result-title">Game Complete!</h2>
+          
+          <div class="result-stats">
+            <div class="stat-item">
+              <span class="stat-label">Time</span>
+              <span class="stat-value">{{ gameState.elapsedTime }}s</span>
             </div>
+            <div class="stat-item">
+              <span class="stat-label">Accuracy</span>
+              <span class="stat-value">{{ currentAccuracy }}%</span>
+            </div>
+          </div>
 
+          <div class="scoreboard">
+            <h3>Top Scores</h3>
+            <ul class="score-list">
+              <li v-for="(score, index) in currentGameScoreBoardReactive" 
+                  :key="index" 
+                  :class="{ 'new-score': score.isNew }">
+                <span class="score-rank">{{ index + 1 }}</span>
+                <span class="score-name">{{ score.playerName }}</span>
+                <span class="score-time">{{ score.timeSpent }}s</span>
+                <span class="score-accuracy">{{ (score.accuracy * 100).toFixed(2) }}%</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="result-actions">
+            <button class="result-button result-button--secondary" @click="hideHighScoreModal">
+              Menu
+            </button>
+            <button class="result-button result-button--primary" @click="restartGame">
+              Play Again
+            </button>
           </div>
         </div>
       </div>
     </Modal>
 
-    <div class="" v-if="gameIsOngoing">
-
-      <NewGameForm :game-state="gameState" mode="retry" @gotoBoardOptions="stopCurrentGame" :availableCardTypes="availableCardTypes" :boardSizeOptions="boardSizeOptions" @startGame="startGame" />
-    </div>
-
+    <!-- Only show retry form after game completion -->
+    <NewGameForm 
+      v-if="gameState.gameCompleted"
+      :game-state="gameState" 
+      mode="retry" 
+      @gotoBoardOptions="stopCurrentGame"
+      :availableCardTypes="availableCardTypes" 
+      :boardSizeOptions="boardSizeOptions" 
+      @startGame="startGame"
+    />
   </div>
 </template>
 
-<script setup>
-import { ref } from 'vue';
+<script setup lang="ts">
+import { ref, reactive, computed, onUnmounted } from 'vue';
 import { useStorage } from '@vueuse/core';
 import { useSound } from '@vueuse/sound'
 import buttonSfx from '../assets/sounds/404740__owlstorm__retro-video-game-sfx-move.wav'
@@ -101,13 +142,14 @@ const clickedCards = ref([]);
 
 
 const gameState = reactive({
-  cardType: 'letters',
-  boardSizeId: '4x4',
+  cardType: 'animals', // Changed from 'letters' to match default cardType ref
+  boardSizeId: '2x2', // Changed to match default boardSizeId ref
   cards: [],
   elapsedTime: 0,
   gameStartTime: null,
   hits: 0,
   misses: 0,
+  gameCompleted: false,
   currentGame: { uuid: '', playerName: 'Anonymous', started: false },
   clickedCards: [],
   // Add other properties here as needed
@@ -116,8 +158,10 @@ const gameState = reactive({
 const gameIsOngoing = computed(() => gameState.currentGame.started);
 
 function stopCurrentGame () {
+  gameState.gameCompleted = false;
   gameState.currentGame.uuid = '';
   gameState.currentGame.started = false;
+  highScoreModalVisible.value = false;
   clearInterval(intervalId);
 }
 const cardType = ref('animals');
@@ -163,6 +207,8 @@ function startGame (gameOptions) {
   gameState.hits = 0;
   gameState.misses = 0;
   gameState.cards = generateAndShuffleCards(gameOptions.cardType, gameOptions.boardSizeId);
+  gameState.gameCompleted = false;
+  highScoreModalVisible.value = false;
   /*   gameState.currentGame = { uuid: generateUUID(), playerName: gameOptions.playerName, started: true };
    */
   // Clear existing interval if any
@@ -177,7 +223,18 @@ function startGame (gameOptions) {
 
 };
 
-
+function restartGame() {
+  const currentSettings = {
+    cardType: gameState.cardType,
+    boardSizeId: gameState.boardSizeId,
+    playerName: gameState.currentGame.playerName,
+    gfxOn: true, // Or get from current settings
+    musicOn: false, // Or get from current settings
+  };
+  
+  startGame(currentSettings);
+  hideHighScoreModal();
+}
 
 const boardSizeOptions = [
   {
@@ -245,7 +302,8 @@ const availableCards = {
   
 };
 
-const availableCardTypes = availableCards;
+// Convert availableCards to array format before passing to components
+const availableCardTypes = computed(() => Object.values(availableCards));
 
 const generateAndShuffleCards = (type, sizeId) => {
   // Extract rows and columns from the sizeId, e.g., '4x4' -> [4, 4]
@@ -353,6 +411,7 @@ const checkForMatch = () => {
   }
 
   if (gameState.cards.every(card => card.revealed)) {
+    gameState.gameCompleted = true;
     setTimeout(() => {
       updateScoreBoard(); // This will now also handle the top 10 check
     }, 100);
@@ -437,6 +496,16 @@ function showHighScoreModal () {
 
 function hideHighScoreModal () {
   highScoreModalVisible.value = false;
+}
+
+const showResultModal = computed(() => 
+  gameState.gameCompleted && 
+  highScoreModalVisible.value
+);
+
+function handleModalClose() {
+  hideHighScoreModal();
+  // Don't stop the game here, let user see their score and retry options
 }
 
 const currentAccuracy = computed(() => {
@@ -625,5 +694,153 @@ body {
 .new-score {
   background-color: lightgreen; /* or any highlight color */
   /* Other styling as needed */
+}
+
+.result-modal {
+  width: 90%;
+  max-width: 600px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+  backdrop-filter: blur(8px);
+}
+
+.result-title {
+  font-size: 2rem;
+  color: #2d3748;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.result-stats {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #4a5568;
+  display: block;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #2d3748;
+}
+
+.scoreboard {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+}
+
+.score-list {
+  list-style: none;
+  padding: 0;
+}
+
+.score-list li {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 1rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.new-score {
+  background: rgba(72, 187, 120, 0.2);
+  border-radius: 4px;
+}
+
+.result-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .result-modal {
+    padding: 1rem;
+    margin: 1rem;
+  }
+
+  .result-title {
+    font-size: 1.5rem;
+  }
+
+  .stat-value {
+    font-size: 1.2rem;
+  }
+}
+
+.retry-options {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.game-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.bottom-controls {
+  margin: 2rem auto;
+  width: 100%;
+  max-width: 480px;
+}
+
+/* New result button styles */
+.result-button {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.result-button--primary {
+  background: linear-gradient(135deg, #4299e1, #667eea);
+  color: white;
+  box-shadow: 0 4px 6px rgba(66, 153, 225, 0.3);
+}
+
+.result-button--secondary {
+  background: linear-gradient(135deg, #718096, #4a5568);
+  color: white;
+  box-shadow: 0 4px 6px rgba(74, 85, 104, 0.3);
+}
+
+.result-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+}
+
+.result-button:active {
+  transform: translateY(0);
+}
+
+.result-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 2rem;
 }
 </style>
