@@ -1,24 +1,28 @@
 import { ref, computed } from 'vue'
+import { useCookie } from '#app'
 import en from '../locales/en.json'
 import nb from '../locales/nb.json'
 
 const translations = { en, nb }
 
 export function useI18n() {
-  // Change default locale detection
-  const getInitialLocale = () => {
-    if (process.client) {
-      const stored = localStorage.getItem('locale')
-      if (stored) return stored
-      
-      // Check browser language
-      const browserLang = navigator.language.toLowerCase()
-      return browserLang.startsWith('nb') ? 'nb' : 'en'
-    }
-    return 'en'
-  }
+  // Use cookie instead of localStorage
+  const localeCookie = useCookie('locale', {
+    default: () => 'en',
+    // Cookie will be available on both client and server
+    sameSite: 'lax',
+    // 1 year expiry
+    maxAge: 31536000
+  })
 
-  const currentLocale = ref(getInitialLocale())
+  const currentLocale = ref(localeCookie.value)
+
+  // If on client side, check browser language for initial value
+  if (process.client && !localeCookie.value) {
+    const browserLang = navigator.language.toLowerCase()
+    currentLocale.value = browserLang.startsWith('nb') ? 'nb' : 'en'
+    localeCookie.value = currentLocale.value
+  }
 
   const t = (key: string) => {
     const keys = key.split('.')
@@ -34,11 +38,8 @@ export function useI18n() {
   }
 
   const setLocale = (locale: string) => {
-    console.log('Setting locale to:', locale); // Add debugging
     currentLocale.value = locale
-    if (process.client) {
-      localStorage.setItem('locale', locale)
-    }
+    localeCookie.value = locale
   }
 
   const locale = computed(() => currentLocale.value)

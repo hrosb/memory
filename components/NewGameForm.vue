@@ -75,14 +75,14 @@
       <div class="language-buttons">
         <button 
           type="button"
-          @click="setLocale('en')" 
-          :class="['lang-btn', { 'active': locale === 'en' }]"
-        >English</button>
-        <button 
-          type="button"
           @click="setLocale('nb')" 
           :class="['lang-btn', { 'active': locale === 'nb' }]"
         >Norsk</button>
+        <button 
+          type="button"
+          @click="setLocale('en')" 
+          :class="['lang-btn', { 'active': locale === 'en' }]"
+        >English</button>
       </div>
     </div>
 
