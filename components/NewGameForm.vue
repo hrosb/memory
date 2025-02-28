@@ -125,13 +125,18 @@
           </li>
         </ul>
       </div>
-      <button
-        v-if="mode === 'new-game'"
-        class="mt-2 w-full p-2 bg-[rgba(255,255,255,0.5)] border border-[rgba(0,0,0,0.1)] rounded transition-colors hover:bg-[rgba(255,255,255,0.8)]"
-        @click="toggleLeaderboardPreview"
-      >
-        {{ showLeaderboardPreview ? t('common.hideHighScores') : t('common.showHighScores') }}
-      </button>
+      <div class="mt-4 flex gap-2">
+        <button
+          v-if="mode === 'new-game'"
+          class="flex-1 p-2 bg-[rgba(255,255,255,0.5)] border border-[rgba(0,0,0,0.1)] rounded transition-colors hover:bg-[rgba(255,255,255,0.8)]"
+          @click="toggleLeaderboardPreview"
+        >
+          {{ showLeaderboardPreview ? t('common.hideHighScores') : t('common.showHighScores') }}
+        </button>
+        
+
+      </div>
+
     </div>
 
     <!-- Language Switcher -->
@@ -189,11 +194,15 @@
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted, watch } from 'vue'
 import { useLocalStorage } from '@vueuse/core'
+import { useUrlSearchParams } from '@vueuse/core'
 import { useI18n } from '../composables/useI18n'
 import { useLeaderboard } from '../composables/useLeaderboard'
 
 const { t, setLocale, locale } = useI18n()
 const { getLeaderboard, leaderboard: boardScores, isLoading: leaderboardLoading } = useLeaderboard()
+
+// Get URL params for syncing
+const urlParams = useUrlSearchParams('history')
 
 interface AudioSettings {
   gfx: boolean
@@ -224,12 +233,31 @@ const playerName = useLocalStorage('playerName', '')
 const nameError = ref('')
 const isLoading = ref(false)
 const showForm = ref(true)
-const cardType = ref(props.gameState.cardType)
-const boardSizeId = ref(props.gameState.boardSizeId)
 
+// Sync these with URL parameters rather than just local refs
+const cardType = computed({
+  get: () => urlParams.cardType || props.gameState.cardType,
+  set: (value) => { urlParams.cardType = value }
+});
+
+const boardSizeId = computed({
+  get: () => urlParams.boardSize || props.gameState.boardSizeId,
+  set: (value) => { urlParams.boardSize = value }
+});
+
+// Sync audio settings with URL
 const audioSettings = useLocalStorage<AudioSettings>('audioSettings', {
-  gfx: true,
-  music: false
+  gfx: urlParams.sound !== 'false', // Default true unless specifically false
+  music: urlParams.music === 'true' // Default false unless specifically true
+})
+
+// Update URL when audio settings change
+watch(() => audioSettings.value.gfx, (newValue) => {
+  urlParams.sound = newValue.toString();
+})
+
+watch(() => audioSettings.value.music, (newValue) => {
+  urlParams.music = newValue.toString();
 })
 
 // Simplified formState
@@ -293,4 +321,5 @@ function toggleLeaderboardPreview() {
     loadLeaderboardPreview(cardType.value, boardSizeId.value)
   }
 }
+
 </script>

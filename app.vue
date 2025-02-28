@@ -85,6 +85,7 @@
             <button class="result-button result-button--primary" @click="restartGame">
               {{ t('game.playAgain') }}
             </button>
+
           </div>
         </div>
       </div>
@@ -100,23 +101,47 @@
       :boardSizeOptions="boardSizeOptions" 
       @startGame="startGame"
     />
+
+    <!-- Add share dialog -->
+    <Modal v-if="showShareDialog" @closeModal="showShareDialog = false">
+      <div class="share-modal">
+        <h2 class="share-title">{{ t('game.shareableLink') }}</h2>
+        <div class="share-input-group">
+          <input
+            ref="shareInput"
+            type="text"
+            readonly
+            :value="shareableUrl"
+            class="share-input"
+          />
+          <button @click="copyToClipboard(shareableUrl)" class="share-copy-btn">
+            {{ linkCopied ? t('common.copied') : t('common.copy') }}
+          </button>
+        </div>
+        <div class="share-info">
+          <p>{{ t('game.shareInfo') }}</p>
+        </div>
+        <div class="share-actions">
+          <button @click="showShareDialog = false" class="share-close-btn">
+            {{ t('common.close') }}
+          </button>
+        </div>
+      </div>
+    </Modal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onUnmounted } from 'vue';
-import { useStorage } from '@vueuse/core';
+import { ref, reactive, computed, onUnmounted, onMounted, watch } from 'vue';
+import { useStorage, useUrlSearchParams } from '@vueuse/core';
 import { useSound } from '@vueuse/sound'
 import buttonSfx from '../assets/sounds/404740__owlstorm__retro-video-game-sfx-move.wav'
 import correctSoundGfx from '../assets/sounds/665182__el_boss__item-or-material-pickup-pop-2-of-3.wav'
 import gameMusic from '../assets/sounds/music.mp3'
-
-
 import alfabetet from '../assets/sounds/norwegian-letter-sounds/alfabetlyder_01.mp3';
 
 import { useI18n } from './composables/useI18n'
 const { t, setLocale, locale } = useI18n()
-
 const { play: startGameSound, isPlaying: gameSoundIsPlaying, stop: stopGameMusic } = useSound(gameMusic, { volume: 0.3 })
 const { play: clickSound } = useSound(buttonSfx)
 const { play: correctSound } = useSound(correctSoundGfx);
@@ -158,9 +183,35 @@ const { play: playLetterSound } = useSound(alfabetet, {
 const clickedCards = ref([]);
 
 
+const urlParams = useUrlSearchParams('history');
+
+// Create computed refs for cardType and boardSizeId that sync with URL
+const cardType = computed({
+  get: () => urlParams.cardType || 'animals',
+  set: (value) => { urlParams.cardType = value }
+});
+
+const boardSizeId = computed({
+  get: () => urlParams.boardSize || '2x2',
+  set: (value) => { urlParams.boardSize = value }
+});
+
+// Create reactive reference to track sound settings - also tied to URL
+const soundEnabled = computed({
+  get: () => urlParams.sound !== 'false', // Default to true if not specified
+  set: (value) => { urlParams.sound = value.toString() }
+});
+
+// Track music setting via URL param
+const musicEnabled = computed({
+  get: () => urlParams.music === 'true', // Default to false if not specified
+  set: (value) => { urlParams.music = value.toString() }
+});
+
+// Initialize game state with values from URL if available
 const gameState = reactive({
-  cardType: 'animals', // Changed from 'letters' to match default cardType ref
-  boardSizeId: '2x2', // Changed to match default boardSizeId ref
+  cardType: cardType.value, // Initialize from computed prop
+  boardSizeId: boardSizeId.value, // Initialize from computed prop
   cards: [],
   elapsedTime: 0,
   gameStartTime: null,
@@ -182,8 +233,6 @@ function stopCurrentGame () {
   clearInterval(intervalId);
   stopGameMusic(); // Add this line to stop music when stopping game
 }
-const cardType = ref('animals');
-const boardSizeId = ref('2x2');
 const storeBoardLocalStorage = useStorage('memoryGameScoreBoardReactive', {});
 
 const currentGameScoreBoardReactive = computed(() => {
@@ -249,8 +298,8 @@ function restartGame() {
     cardType: gameState.cardType,
     boardSizeId: gameState.boardSizeId,
     playerName: gameState.currentGame.playerName,
-    gfxOn: true, // Or get from current settings
-    musicOn: false, // Or get from current settings
+    gfxOn: soundEnabled.value,
+    musicOn: musicEnabled.value,
   };
   
   startGame(currentSettings);
@@ -386,28 +435,21 @@ function handleCardClick (index) {
     clickIsMatch = checkForMatch();
   }
 
+  // Only play sounds if sound is enabled
   if (clickIsMatch) {
-    correctSound();
-  }
-  else {
-
-    if(gameState.cardType === 'letters'){
-      console.log(card.name.toLowerCase())
-      playLetterSound({id: card.name.toLowerCase()});
+    if (soundEnabled.value) {
+      correctSound();
     }
-    else{
-      clickSound();
+  } else {
+    if (soundEnabled.value) {
+      if(gameState.cardType === 'letters'){
+        playLetterSound({id: card.name.toLowerCase()});
+      } else {
+        clickSound();
+      }
     }
-
-    
   }
-
-
-
-
 };
-
-
 
 const checkForMatch = () => {
   const [firstIndex, secondIndex] = clickedCards.value;
