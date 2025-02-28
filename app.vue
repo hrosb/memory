@@ -30,12 +30,12 @@
       </div>
     </div>
 
-    <!-- Updated result modal with new button styles -->
+    <!-- Updated result modal with global leaderboard -->
     <Modal v-if="showResultModal" @closeModal="handleModalClose">
       <div class="result-modal">
         <div class="result-modal-content">
           <h2 class="result-title">
-            {{ currentGameScoreBoardReactive.some(s => s.isNew) ? t('results.gameComplete') : t('results.almostThere') }}
+            {{ isHighScore ? t('results.gameComplete') : t('results.almostThere') }}
           </h2>
           
           <div class="result-stats">
@@ -47,18 +47,25 @@
               <span class="stat-label">{{ t('score.accuracy') }}</span>
               <span class="stat-value">{{ currentAccuracy }}%</span>
             </div>
+            <div v-if="playerRank" class="stat-item">
+              <span class="stat-label">{{ t('score.rank') }}</span>
+              <span class="stat-value">#{{ playerRank }}</span>
+            </div>
           </div>
 
-          <!-- Show either scoreboard or encouragement -->
-          <div v-if="currentGameScoreBoardReactive.some(s => s.isNew)" class="scoreboard">
-            <h3>{{ t('score.topScores') }}</h3>
-            <ul class="score-list">
-              <li v-for="(score, index) in currentGameScoreBoardReactive" 
-                  :key="index" 
-                  :class="{ 'new-score': score.isNew }">
+          <!-- Show either global leaderboard or encouragement -->
+          <div v-if="isHighScore" class="scoreboard">
+            <h3>{{ t('score.globalTopScores') }}</h3>
+            <div v-if="leaderboardLoading" class="loading-spinner">
+              <div class="spinner"></div>
+            </div>
+            <ul v-else class="score-list">
+              <li v-for="(score, index) in leaderboard" 
+                  :key="score.id" 
+                  :class="{ 'new-score': score.id === lastSubmittedScore?.id }">
                 <span class="score-rank">{{ index + 1 }}</span>
                 <span class="score-name">{{ score.playerName }}</span>
-                <span class="score-time">{{ score.timeSpent }}s</span>
+                <span class="score-time">{{ score.timeSpent.toFixed(2) }}s</span>
                 <span class="score-accuracy">{{ (score.accuracy * 100).toFixed(2) }}%</span>
               </li>
             </ul>
@@ -448,78 +455,71 @@ const randomEncouragement = computed(() =>
   encouragementMessages[Math.floor(Math.random() * encouragementMessages.length)]
 );
 
-const updateScoreBoard = () => {
+import { useLeaderboard } from './composables/useLeaderboard';
+
+const { 
+  submitScore, 
+  getLeaderboard, 
+  isLoading: leaderboardLoading, 
+  leaderboard,
+  playerRank
+} = useLeaderboard();
+
+const lastSubmittedScore = ref(null);
+const isHighScore = ref(false);
+
+const updateScoreBoard = async () => {
   const finalScore = {
+    playerName: gameState.currentGame.playerName || 'Anonymous',
     timeSpent: parseFloat(gameState.elapsedTime),
     accuracy: parseFloat(currentAccuracy.value) / 100,
     boardSize: gameState.boardSizeId,
     cardType: gameState.cardType
   };
 
-  const scoreKey = `${finalScore.boardSize}-${finalScore.cardType}`;
-  let storedScoreBoard = JSON.parse(localStorage.getItem('memoryGameScoreBoard')) || {};
-
-
-  if (!storedScoreBoard[scoreKey]) {
-    storedScoreBoard[scoreKey] = [];
-  }
-
-  if (!storeBoardLocalStorage.value[scoreKey]) {
-    storeBoardLocalStorage.value[scoreKey] = [];
-  }
-
-
-  // Add the new score (temporarily without a name)
-  const newScore = {
-    ...finalScore,
-    uuid: gameState.currentGame.uuid,
-    playerName: gameState.currentGame.playerName,
-    isNew: true // Mark as new
-  };
-  storedScoreBoard[scoreKey].push(newScore);
-
-  storedScoreBoard[scoreKey].forEach(score => {
-    if (score.uuid !== newScore.uuid) {
-      score.isNew = false;
+  try {
+    // Submit score to backend API
+    const result = await submitScore(finalScore);
+    
+    if (result) {
+      lastSubmittedScore.value = result.score;
+      
+      // If rank is 10 or better, it's a high score for our purposes
+      isHighScore.value = result.rank <= 10;
+      
+      if (isHighScore.value) {
+        // Fetch the updated leaderboard for this board size and card type
+        await getLeaderboard({
+          boardSize: gameState.boardSizeId,
+          cardType: gameState.cardType,
+          limit: 10
+        });
+        
+        showHighScoreModal();
+      } else {
+        showEncouragementModal();
+      }
+    } else {
+      // If submission failed, still show the encouragement modal
+      showEncouragementModal();
     }
-  });
-
-  // Sort the scores and keep only the top 10
-  storedScoreBoard[scoreKey].sort((a, b) => {
-    // Sorting logic based on time spent and accuracy
-    // Adjust this based on how you want to calculate the top scores
-    return a.timeSpent - b.timeSpent || b.accuracy - a.accuracy;
-  });
-
-
-  const isHighScore = storedScoreBoard[scoreKey].some((score, index) => {
-    return score.uuid === gameState.currentGame.uuid && index < 10;
-  });
-
-  if (isHighScore) {
-
-    showHighScoreModal();
-
-    //newScore.playerName = playerName.value;
-    storedScoreBoard[scoreKey] = storedScoreBoard[scoreKey].map(score => {
-      return score.uuid === newScore.uuid ? newScore : score;
-    });
-  } else {
+  } catch (error) {
+    console.error('Failed to update score:', error);
     showEncouragementModal();
   }
-
-  // Check if the player's score is in the top 10
-  localStorage.setItem('memoryGameScoreBoard', JSON.stringify(storedScoreBoard));
-
-  storeBoardLocalStorage.value[scoreKey] = storedScoreBoard[scoreKey];
-
 };
 
 const highScoreModalVisible = ref(false);
 
 function showHighScoreModal () {
   highScoreModalVisible.value = true;
-
+  
+  // Refresh leaderboard data
+  getLeaderboard({
+    boardSize: gameState.boardSizeId,
+    cardType: gameState.cardType,
+    limit: 10
+  });
 }
 
 function hideHighScoreModal () {
@@ -924,5 +924,26 @@ body {
 .lang-btn.active {
   background: #4299e1;
   color: white;
+}
+
+/* Add loading spinner styles */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-left-color: #4299e1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 </style>

@@ -67,6 +67,27 @@
           </label>
         </div>
       </div>
+
+      <!-- Global Leaderboard Preview -->
+      <div class="leaderboard-preview" v-if="showLeaderboardPreview">
+        <h3 class="preview-title">{{ t('score.globalTopScores') }}</h3>
+        <div v-if="leaderboardLoading" class="loading-indicator">
+          {{ t('common.loading') }}...
+        </div>
+        <div v-else-if="previewLeaderboard.length === 0" class="no-scores">
+          {{ t('score.noScoresYet') }}
+        </div>
+        <ul v-else class="preview-list">
+          <li v-for="(score, index) in previewLeaderboard.slice(0, 3)" :key="score.id">
+            <span class="preview-rank">{{ index + 1 }}</span>
+            <span class="preview-name">{{ score.playerName }}</span>
+            <span class="preview-time">{{ score.timeSpent.toFixed(2) }}s</span>
+          </li>
+        </ul>
+        <button class="preview-button" @click="toggleLeaderboardPreview">
+          {{ showLeaderboardPreview ? t('common.hide') : t('common.show') }}
+        </button>
+      </div>
     </div>
 
     <!-- Replace language switcher markup -->
@@ -106,10 +127,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted } from 'vue';
+import { ref, computed, reactive, onMounted, watch } from 'vue';
 import { useLocalStorage } from '@vueuse/core';
-import { useI18n } from '../composables/useI18n'
-const { t, setLocale, locale } = useI18n()
+import { useI18n } from '../composables/useI18n';
+import { useLeaderboard } from '../composables/useLeaderboard';
+
+const { t, setLocale, locale } = useI18n();
+const { getLeaderboard, leaderboard: boardScores, isLoading: leaderboardLoading } = useLeaderboard();
 
 interface AudioSettings {
   gfx: boolean;
@@ -189,6 +213,38 @@ onMounted(() => {
     formState.isDirty = true;
   }
 });
+
+const showLeaderboardPreview = ref(false);
+const previewLeaderboard = ref([]);
+
+// Watch for changes in cardType and boardSizeId to prefetch leaderboard data
+watch([cardType, boardSizeId], async ([newCardType, newBoardSizeId]) => {
+  if (showLeaderboardPreview.value) {
+    await loadLeaderboardPreview(newCardType, newBoardSizeId);
+  }
+});
+
+async function loadLeaderboardPreview(cardType, boardSizeId) {
+  try {
+    await getLeaderboard({
+      cardType,
+      boardSize: boardSizeId,
+      limit: 3
+    });
+    
+    previewLeaderboard.value = [...boardScores.value];
+  } catch (error) {
+    console.error("Failed to load leaderboard preview", error);
+  }
+}
+
+function toggleLeaderboardPreview() {
+  showLeaderboardPreview.value = !showLeaderboardPreview.value;
+  
+  if (showLeaderboardPreview.value) {
+    loadLeaderboardPreview(cardType.value, boardSizeId.value);
+  }
+}
 </script>
 
 <style scoped>
@@ -433,5 +489,65 @@ input[type="checkbox"]:checked + .toggle-switch:before {
   border-color: #4299e1;
   color: #2d3748;
   font-weight: 500;
+}
+
+.leaderboard-preview {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+}
+
+.preview-title {
+  font-size: 1rem;
+  text-align: center;
+  margin-bottom: 0.75rem;
+}
+
+.preview-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.preview-list li {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.preview-rank {
+  font-weight: bold;
+  width: 2rem;
+}
+
+.preview-name {
+  flex: 1;
+}
+
+.preview-time {
+  font-weight: 500;
+}
+
+.loading-indicator, .no-scores {
+  text-align: center;
+  padding: 1rem 0;
+  color: #666;
+}
+
+.preview-button {
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.preview-button:hover {
+  background: rgba(255, 255, 255, 0.8);
 }
 </style>
