@@ -21,7 +21,11 @@
     "accuracy": "Nøyaktighet",
     "topScores": "Toppscore",
     "yourTime": "Din Tid",
-    "yourAccuracy": "Din Nøyaktighet"
+    "yourAccuracy": "Din Nøyaktighet",
+    "globalTopScores": "Globale Toppscore",
+    "rank": "Rangering",
+    "yourRank": "Din Rangering",
+    "noScoresYet": "Ingen poeng ennå"
   },
   "results": {
     "gameComplete": "Spill Fullført!",
@@ -35,5 +39,19 @@
     "Til og med Einstein måtte øve – selv om han sikkert hadde fått en kosmisk høy score. 🧠",
     "Du blir bedre! Disse rekordene er bare litt mer tverre enn en hissig elg. 💫",
     "Husk: alle mestere startet som nybegynnere (med mulig unntak av disse rekordholderne). 🌟"
-  ]
+  ],
+  "common": {
+    "loading": "Laster",
+    "previous": "Forrige",
+    "next": "Neste",
+    "page": "Side",
+    "all": "Alle",
+    "player": "Spiller",
+    "date": "Dato",
+    "backToGame": "Tilbake til spillet",
+    "home": "Hjem",
+    "leaderboard": "Resultattavle",
+    "show": "Vis",
+    "hide": "Skjul"
+  }
 }

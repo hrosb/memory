@@ -1,48 +1,75 @@
 <template>
-  <div class="new-game-form" 
-       :class="{ 'form-entering': showForm }"
-       :data-mode="props.mode">
-    <div class="form-header">
-      <h2 class="form-title">{{ mode === 'retry' ? t('game.tryAgain') : t('game.newGame') }}</h2>
+  <div
+    class="max-w-[480px] mx-auto my-8 p-8 bg-[rgba(255,255,255,0.95)] rounded-[16px] shadow-[0_8px_32px_rgba(31,38,135,0.15)] backdrop-blur-[8px] translate-y-[10px] opacity-100 transition-all duration-300 ease-out"
+    :class="{
+      'translate-y-0': showForm,
+      'scale-[0.8]': props.mode === 'retry'
+    }"
+    :data-mode="props.mode"
+  >
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <h2 class="text-[1.8rem] text-gray-800 font-semibold mb-0">
+        {{ mode === 'retry' ? t('game.tryAgain') : t('game.newGame') }}
+      </h2>
     </div>
 
-    <div class="game-options" v-if="mode === 'new-game'">
-      <!-- Simplified name input without validation -->
-      <div class="form-group">
-        <label class="form-label" for="name">{{ t('game.nameInput') }}</label>
-        <div class="input-wrapper">
-          <input 
-            class="form-input"
-            name="name" 
+    <!-- Game options -->
+    <div v-if="mode === 'new-game'">
+      <!-- Player Name -->
+      <div class="mb-6">
+        <label class="block text-[0.9rem] font-medium text-gray-600 mb-2" for="name">
+          {{ t('game.nameInput') }}
+        </label>
+        <div class="relative">
+          <input
+            class="w-full p-3 border-2 border-gray-200 rounded-lg text-base transition-colors bg-white focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200"
+            name="name"
             v-model="playerName"
             maxlength="20"
             :placeholder="t('game.namePlaceholder')"
-          >
+          />
         </div>
       </div>
 
-      <!-- Card Type Selection -->
-      <div class="form-group">
-        <label class="form-label" for="card-type">{{ t('game.cardType') }}</label>
-        <div class="select-wrapper">
-          <select class="form-select" id="card-type" v-model="cardType">
-            <option v-for="ct in availableCardTypes" 
-                    :key="ct.type" 
-                    :value="ct.type">
+      <!-- Card Type -->
+      <div class="mb-6">
+        <label class="block text-[0.9rem] font-medium text-gray-600 mb-2" for="card-type">
+          {{ t('game.cardType') }}
+        </label>
+        <div class="relative">
+          <select
+            class="w-full p-3 border-2 border-gray-200 rounded-lg text-base transition-colors bg-white focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200"
+            id="card-type"
+            v-model="cardType"
+          >
+            <option
+              v-for="ct in props.availableCardTypes"
+              :key="ct.type"
+              :value="ct.type"
+            >
               {{ ct.name_nb }}
             </option>
           </select>
         </div>
       </div>
 
-      <!-- Difficulty Selection -->
-      <div class="form-group">
-        <label class="form-label" for="board-size">{{ t('game.difficulty') }}</label>
-        <div class="select-wrapper">
-          <select class="form-select" id="board-size" v-model="boardSizeId">
-            <option v-for="board in boardSizeOptions" 
-                    :key="board.id" 
-                    :value="board.id">
+      <!-- Difficulty -->
+      <div class="mb-6">
+        <label class="block text-[0.9rem] font-medium text-gray-600 mb-2" for="board-size">
+          {{ t('game.difficulty') }}
+        </label>
+        <div class="relative">
+          <select
+            class="w-full p-3 border-2 border-gray-200 rounded-lg text-base transition-colors bg-white focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200"
+            id="board-size"
+            v-model="boardSizeId"
+          >
+            <option
+              v-for="board in props.boardSizeOptions"
+              :key="board.id"
+              :value="board.id"
+            >
               {{ board.name_nb }}
             </option>
           </select>
@@ -50,76 +77,109 @@
       </div>
 
       <!-- Sound Options -->
-      <div class="sound-options">
-        <div class="toggle-option">
-          <label class="toggle-label">
-            <input type="checkbox" v-model="audioSettings.gfx">
-            <span class="toggle-switch"></span>
-            <span class="toggle-text">{{ audioSettings.gfx ? t('game.soundOn') : t('game.soundOff') }}</span>
+      <div class="flex flex-col gap-4 my-6">
+        <!-- Gfx Toggle -->
+        <div class="flex items-center">
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" v-model="audioSettings.gfx" />
+            <div class="w-12 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:bg-blue-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-6 peer-checked:after:border-white"></div>
+            <span class="ml-2 text-gray-700">
+              {{ audioSettings.gfx ? t('game.soundOn') : t('game.soundOff') }}
+            </span>
           </label>
         </div>
 
-        <div class="toggle-option">
-          <label class="toggle-label">
-            <input type="checkbox" v-model="audioSettings.music">
-            <span class="toggle-switch"></span>
-            <span class="toggle-text">{{ audioSettings.music ? t('game.musicOn') : t('game.musicOff') }}</span>
+        <!-- Music Toggle -->
+        <div class="flex items-center">
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" v-model="audioSettings.music" />
+            <div class="w-12 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:bg-blue-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-6 peer-checked:after:border-white"></div>
+            <span class="ml-2 text-gray-700">
+              {{ audioSettings.music ? t('game.musicOn') : t('game.musicOff') }}
+            </span>
           </label>
         </div>
       </div>
 
-      <!-- Global Leaderboard Preview -->
-      <div class="leaderboard-preview" v-if="showLeaderboardPreview">
-        <h3 class="preview-title">{{ t('score.globalTopScores') }}</h3>
-        <div v-if="leaderboardLoading" class="loading-indicator">
+      <!-- Leaderboard Preview -->
+      <div
+        v-if="showLeaderboardPreview"
+        class="mt-6 p-4 bg-[rgba(255,255,255,0.5)] rounded-lg"
+      >
+        <h3 class="text-center text-base mb-3">{{ t('score.globalTopScores') }}</h3>
+        <div v-if="leaderboardLoading" class="text-center py-4 text-gray-600">
           {{ t('common.loading') }}...
         </div>
-        <div v-else-if="previewLeaderboard.length === 0" class="no-scores">
+        <div v-else-if="previewLeaderboard.length === 0" class="text-center py-4 text-gray-600">
           {{ t('score.noScoresYet') }}
         </div>
-        <ul v-else class="preview-list">
-          <li v-for="(score, index) in previewLeaderboard.slice(0, 3)" :key="score.id">
-            <span class="preview-rank">{{ index + 1 }}</span>
-            <span class="preview-name">{{ score.playerName }}</span>
-            <span class="preview-time">{{ score.timeSpent.toFixed(2) }}s</span>
+        <ul v-else class="list-none p-0 m-0">
+          <li
+            v-for="(score, index) in previewLeaderboard.slice(0, 3)"
+            :key="score.id"
+            class="flex items-center py-2 border-b border-[rgba(0,0,0,0.1)]"
+          >
+            <span class="font-bold w-6">{{ index + 1 }}</span>
+            <span class="flex-1">{{ score.playerName }}</span>
+            <span class="font-medium">{{ score.timeSpent.toFixed(2) }}s</span>
           </li>
         </ul>
-        <button class="preview-button" @click="toggleLeaderboardPreview">
-          {{ showLeaderboardPreview ? t('common.hide') : t('common.show') }}
+      </div>
+      <button
+        v-if="mode === 'new-game'"
+        class="mt-2 w-full p-2 bg-[rgba(255,255,255,0.5)] border border-[rgba(0,0,0,0.1)] rounded transition-colors hover:bg-[rgba(255,255,255,0.8)]"
+        @click="toggleLeaderboardPreview"
+      >
+        {{ showLeaderboardPreview ? t('common.hide') : t('common.show') }}
+      </button>
+    </div>
+
+    <!-- Language Switcher -->
+    <div v-if="mode === 'new-game'" class="mt-8 pt-6 border-t border-[rgba(0,0,0,0.1)]">
+      <label class="block text-[0.9rem] font-medium text-gray-600 mb-2">{{ t('game.language') }}</label>
+      <div class="flex gap-2">
+        <button
+          type="button"
+          @click="setLocale('nb')"
+          :class="[
+            'flex-1 p-3 border border-gray-200 rounded-lg bg-white text-gray-600 text-sm transition-colors',
+            locale === 'nb' ? 'bg-gray-100 border-blue-500 font-medium' : 'hover:border-blue-500 hover:text-blue-500'
+          ]"
+        >
+          Norsk
+        </button>
+        <button
+          type="button"
+          @click="setLocale('en')"
+          :class="[
+            'flex-1 p-3 border border-gray-200 rounded-lg bg-white text-gray-600 text-sm transition-colors',
+            locale === 'en' ? 'bg-gray-100 border-blue-500 font-medium' : 'hover:border-blue-500 hover:text-blue-500'
+          ]"
+        >
+          English
         </button>
       </div>
     </div>
 
-    <!-- Replace language switcher markup -->
-    <div class="language-switcher" v-if="mode === 'new-game'">
-      <label class="form-label">{{ t('game.language') }}</label>
-      <div class="language-buttons">
-        <button 
-          type="button"
-          @click="setLocale('nb')" 
-          :class="['lang-btn', { 'active': locale === 'nb' }]"
-        >Norsk</button>
-        <button 
-          type="button"
-          @click="setLocale('en')" 
-          :class="['lang-btn', { 'active': locale === 'en' }]"
-        >English</button>
-      </div>
-    </div>
-
     <!-- Action Buttons -->
-    <div class="form-actions">
-      <button v-if="mode === 'retry'"
-              class="action-button secondary"
-              @click="gotoBoardOptions">
-        <span class="button-icon">←</span>
+    <div class="flex justify-center gap-4 mt-8">
+      <button
+        v-if="mode === 'retry'"
+        class="px-4 py-3 rounded-lg font-semibold transition-all bg-gray-600 text-white hover:brightness-110 active:scale-[0.98]"
+        @click="gotoBoardOptions"
+      >
+        <span class="mr-2">←</span>
         {{ t('game.back') }}
       </button>
-      
-      <button class="action-button primary"
-              @click="startGame"
-              :disabled="props.mode === 'new-game' && !formState.isValid">
-        <span v-if="isLoading" class="loader"></span>
+      <button
+        class="relative px-4 py-3 rounded-lg font-semibold transition-all bg-blue-500 text-white hover:brightness-110 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+        @click="startGame"
+        :disabled="props.mode === 'new-game' && !formState.isValid"
+      >
+        <span
+          v-if="isLoading"
+          class="inline-block w-5 h-5 border-4 border-white border-t-transparent rounded-full animate-spin"
+        />
         <span v-else>{{ props.mode === 'retry' ? t('game.tryAgain') : t('game.startGame') }}</span>
       </button>
     </div>
@@ -127,427 +187,110 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted, watch } from 'vue';
-import { useLocalStorage } from '@vueuse/core';
-import { useI18n } from '../composables/useI18n';
-import { useLeaderboard } from '../composables/useLeaderboard';
+import { ref, computed, reactive, onMounted, watch } from 'vue'
+import { useLocalStorage } from '@vueuse/core'
+import { useI18n } from '../composables/useI18n'
+import { useLeaderboard } from '../composables/useLeaderboard'
 
-const { t, setLocale, locale } = useI18n();
-const { getLeaderboard, leaderboard: boardScores, isLoading: leaderboardLoading } = useLeaderboard();
+const { t, setLocale, locale } = useI18n()
+const { getLeaderboard, leaderboard: boardScores, isLoading: leaderboardLoading } = useLeaderboard()
 
 interface AudioSettings {
-  gfx: boolean;
-  music: boolean;
+  gfx: boolean
+  music: boolean
 }
 
 interface CardType {
-  type: string;
-  name: string;
-  name_nb: string;
-  cards: string[];
+  type: string
+  name: string
+  name_nb: string
+  cards: string[]
 }
 
 const props = defineProps<{
   availableCardTypes: CardType[]
-  boardSizeOptions: { id: string; name_nb: string; }[],
-  mode: 'new-game' | 'retry',
-  gameState: any,
-}>();
+  boardSizeOptions: { id: string; name_nb: string }[]
+  mode: 'new-game' | 'retry'
+  gameState: {
+    cardType: string
+    boardSizeId: string
+    [key: string]: any
+  }
+}>()
 
-const emit = defineEmits(['startGame', 'gotoBoardOptions']);
+const emit = defineEmits(['startGame', 'gotoBoardOptions'])
 
-const playerName = useLocalStorage('playerName', '');
-const nameError = ref('');
-const isLoading = ref(false);
-const showForm = ref(true); // Changed from false to true
-
-const cardType = ref(props.gameState.cardType);
-const boardSizeId = ref(props.gameState.boardSizeId);
+const playerName = useLocalStorage('playerName', '')
+const nameError = ref('')
+const isLoading = ref(false)
+const showForm = ref(true)
+const cardType = ref(props.gameState.cardType)
+const boardSizeId = ref(props.gameState.boardSizeId)
 
 const audioSettings = useLocalStorage<AudioSettings>('audioSettings', {
   gfx: true,
   music: false
-});
+})
 
 // Simplified formState
 const formState = reactive({
-  isValid: computed(() => true), // Always valid now
+  isValid: computed(() => true),
   isDirty: false
-});
+})
 
-// Force initial validation on mount
+// Show the form once mounted
 onMounted(() => {
-  showForm.value = true;
+  showForm.value = true
   if (playerName.value) {
-    formState.isDirty = true;
+    formState.isDirty = true
   }
-});
+})
 
 async function startGame() {
-  isLoading.value = true;
+  isLoading.value = true
   try {
     emit('startGame', {
       cardType: cardType.value,
       boardSizeId: boardSizeId.value,
       playerName: playerName.value || 'Anonymous',
       gfxOn: audioSettings.value.gfx,
-      musicOn: audioSettings.value.music,
-    });
+      musicOn: audioSettings.value.music
+    })
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
 }
-
-const playerNameInputWidth = computed(() => {
-  return `${playerName.value.length * .85}rem`;
-});
 
 function gotoBoardOptions() {
-  emit('gotoBoardOptions');
+  emit('gotoBoardOptions')
 }
 
-onMounted(() => {
-  showForm.value = true;
-  // Validate initial value if exists
-  if (playerName.value) {
-    formState.isDirty = true;
-  }
-});
+const showLeaderboardPreview = ref(false)
+const previewLeaderboard = ref<any[]>([])
 
-const showLeaderboardPreview = ref(false);
-const previewLeaderboard = ref([]);
-
-// Watch for changes in cardType and boardSizeId to prefetch leaderboard data
 watch([cardType, boardSizeId], async ([newCardType, newBoardSizeId]) => {
   if (showLeaderboardPreview.value) {
-    await loadLeaderboardPreview(newCardType, newBoardSizeId);
+    await loadLeaderboardPreview(newCardType, newBoardSizeId)
   }
-});
+})
 
-async function loadLeaderboardPreview(cardType, boardSizeId) {
+async function loadLeaderboardPreview(cardTypeVal: string, boardSize: string) {
   try {
     await getLeaderboard({
-      cardType,
-      boardSize: boardSizeId,
+      cardType: cardTypeVal,
+      boardSize,
       limit: 3
-    });
-    
-    previewLeaderboard.value = [...boardScores.value];
+    })
+    previewLeaderboard.value = [...boardScores.value]
   } catch (error) {
-    console.error("Failed to load leaderboard preview", error);
+    console.error('Failed to load leaderboard preview', error)
   }
 }
 
 function toggleLeaderboardPreview() {
-  showLeaderboardPreview.value = !showLeaderboardPreview.value;
-  
+  showLeaderboardPreview.value = !showLeaderboardPreview.value
   if (showLeaderboardPreview.value) {
-    loadLeaderboardPreview(cardType.value, boardSizeId.value);
+    loadLeaderboardPreview(cardType.value, boardSizeId.value)
   }
 }
 </script>
-
-<style scoped>
-.new-game-form {
-  max-width: 480px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
-  backdrop-filter: blur(8px);
-  transform: translateY(10px);
-  opacity: 1; 
-  transition: all 0.3s ease-out;
-}
-
-.form-entering {
-  transform: translateY(0);
-  opacity: 1;
-}
-
-.form-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.form-title {
-  font-size: 1.8rem;
-  color: #2d3748;
-  font-weight: 600;
-  margin: 0;
-}
-
-.form-group {
-  margin-bottom: 1.5rem;
-}
-
-.form-label {
-  display: block;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #4a5568;
-  margin-bottom: 0.5rem;
-}
-
-.input-wrapper, .select-wrapper {
-  position: relative;
-}
-
-.form-input, .form-select {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: all 0.2s;
-  background-color: white;
-}
-
-.form-input:focus, .form-select:focus {
-  border-color: #4299e1;
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
-  outline: none;
-}
-
-.error {
-  border-color: #fc8181;
-}
-
-.error-message {
-  color: #e53e3e;
-  font-size: 0.8rem;
-  margin-top: 0.25rem;
-}
-
-.sound-options {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin: 1.5rem 0;
-}
-
-.toggle-option {
-  display: flex;
-  align-items: center;
-}
-
-.toggle-label {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-}
-
-.toggle-switch {
-  position: relative;
-  width: 48px;
-  height: 24px;
-  background: #cbd5e0;
-  border-radius: 12px;
-  margin-right: 0.75rem;
-  transition: background 0.3s;
-}
-
-.toggle-switch:before {
-  content: '';
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  background: white;
-  border-radius: 50%;
-  top: 2px;
-  left: 2px;
-  transition: transform 0.3s;
-}
-
-input[type="checkbox"] {
-  display: none;
-}
-
-input[type="checkbox"]:checked + .toggle-switch {
-  background: #4299e1;
-}
-
-input[type="checkbox"]:checked + .toggle-switch:before {
-  transform: translateX(24px);
-}
-
-.form-actions {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 2rem;
-}
-
-.action-button {
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 0.2s;
-  cursor: pointer;
-  border: none;
-}
-
-.action-button.primary {
-  background: #4299e1;
-  color: white;
-}
-
-.action-button.secondary {
-  background: #718096;
-  color: white;
-}
-
-.action-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.action-button:active {
-  transform: translateY(1px);
-}
-
-.action-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.loader {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  border: 3px solid rgba(255,255,255,.3);
-  border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s ease-in-out infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from, .fade-leave-to {
-  opacity: 0;
-}
-
-@media (max-width: 768px) {
-  .new-game-form {
-    margin: 1rem;
-    padding: 1rem;
-  }
-
-  .form-title {
-    font-size: 1.4rem;
-  }
-
-  .action-button {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-  }
-}
-
-[data-mode="retry"] {
-  transform: scale(0.8);
-  max-width: 360px;
-}
-
-/* Replace language switcher styles */
-.language-switcher {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.language-buttons {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.lang-btn {
-  flex: 1;
-  padding: 0.75rem 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: white;
-  color: #4a5568;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.lang-btn:hover {
-  border-color: #4299e1;
-  color: #4299e1;
-}
-
-.lang-btn.active {
-  background: #f7fafc;
-  border-color: #4299e1;
-  color: #2d3748;
-  font-weight: 500;
-}
-
-.leaderboard-preview {
-  margin-top: 1.5rem;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: 8px;
-}
-
-.preview-title {
-  font-size: 1rem;
-  text-align: center;
-  margin-bottom: 0.75rem;
-}
-
-.preview-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.preview-list li {
-  display: flex;
-  align-items: center;
-  padding: 0.5rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.preview-rank {
-  font-weight: bold;
-  width: 2rem;
-}
-
-.preview-name {
-  flex: 1;
-}
-
-.preview-time {
-  font-weight: 500;
-}
-
-.loading-indicator, .no-scores {
-  text-align: center;
-  padding: 1rem 0;
-  color: #666;
-}
-
-.preview-button {
-  margin-top: 0.75rem;
-  padding: 0.5rem;
-  width: 100%;
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.preview-button:hover {
-  background: rgba(255, 255, 255, 0.8);
-}
-</style>

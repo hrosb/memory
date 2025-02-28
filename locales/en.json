@@ -21,7 +21,11 @@
     "accuracy": "Accuracy",
     "topScores": "Top Scores",
     "yourTime": "Your Time",
-    "yourAccuracy": "Your Accuracy"
+    "yourAccuracy": "Your Accuracy",
+    "globalTopScores": "Global Top Scores",
+    "rank": "Rank",
+    "yourRank": "Your Rank",
+    "noScoresYet": "No scores yet"
   },
   "results": {
     "gameComplete": "Game Complete!",
@@ -35,5 +39,19 @@
     "Even Einstein had to practice! (But he probably would've gotten a high score) 🧠",
     "You're getting better! The high scores are just playing hard to get. 💫",
     "Remember: every master was once a beginner! (Except maybe these high score holders) 🌟"
-  ]
+  ],
+  "common": {
+    "loading": "Loading",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page",
+    "all": "All",
+    "player": "Player",
+    "date": "Date",
+    "backToGame": "Back to Game",
+    "home": "Home",
+    "leaderboard": "Leaderboard",
+    "show": "Show",
+    "hide": "Hide"
+  }
 }

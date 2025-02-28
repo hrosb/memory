@@ -1,89 +1,93 @@
 <template>
-  <div class="leaderboard-page">
-    <div class="container">
-      <h1 class="page-title">{{ t('score.globalTopScores') }}</h1>
-      
-      <div class="filter-options">
+  <div class="min-h-screen py-8 [background:linear-gradient(322deg,#ba4aff,rgba(186,74,255,0)_70%),linear-gradient(178deg,#008aff,rgba(0,138,255,0)_70%),linear-gradient(24deg,#00ffc6,rgba(0,255,198,0)_35%)]">
+    <div class="max-w-[1200px] mx-auto p-4 md:p-8 bg-[rgba(255,255,255,0.95)] rounded-[16px] shadow-[0_8px_32px_rgba(31,38,135,0.15)]">
+      <h1 class="text-center mb-8 text-gray-800 text-2xl md:text-4xl">{{ t('score.globalTopScores') }}</h1>
+
+      <!-- Filters -->
+      <div class="flex flex-col items-center gap-4 md:flex-row md:justify-center md:gap-8 mb-8">
         <!-- Board Size Filter -->
-        <div class="filter-group">
-          <label class="filter-label">{{ t('game.difficulty') }}</label>
-          <select v-model="filters.boardSize" class="filter-select">
+        <div class="flex flex-col w-[200px]">
+          <label class="text-sm mb-2 text-gray-600">{{ t('game.difficulty') }}</label>
+          <select v-model="filters.boardSize" class="p-3 border border-gray-200 rounded-lg bg-white">
             <option value="">{{ t('common.all') }}</option>
-            <option v-for="option in boardSizeOptions" :key="option.id" :value="option.id">
-              {{ option.name_nb }}
-            </option>
+            <option v-for="option in boardSizeOptions" :key="option.id" :value="option.id">{{ option.name_nb }}</option>
           </select>
         </div>
-        
+
         <!-- Card Type Filter -->
-        <div class="filter-group">
-          <label class="filter-label">{{ t('game.cardType') }}</label>
-          <select v-model="filters.cardType" class="filter-select">
+        <div class="flex flex-col w-[200px]">
+          <label class="text-sm mb-2 text-gray-600">{{ t('game.cardType') }}</label>
+          <select v-model="filters.cardType" class="p-3 border border-gray-200 rounded-lg bg-white">
             <option value="">{{ t('common.all') }}</option>
-            <option v-for="type in availableCardTypes" :key="type.type" :value="type.type">
-              {{ type.name_nb }}
-            </option>
+            <option v-for="type in availableCardTypes" :key="type.type" :value="type.type">{{ type.name_nb }}</option>
           </select>
         </div>
       </div>
-      
+
       <!-- Leaderboard Table -->
-      <div class="leaderboard-table-wrapper">
-        <div v-if="isLoading" class="loading-container">
-          <div class="loading-spinner"></div>
+      <div class="overflow-x-auto mb-8">
+        <!-- Loading -->
+        <div v-if="isLoading" class="flex flex-col items-center py-12">
+          <div class="w-10 h-10 border-4 border-gray-100 border-t-blue-400 rounded-full animate-spin mb-4"></div>
           <p>{{ t('common.loading') }}...</p>
         </div>
-        
-        <table v-else class="leaderboard-table">
+
+        <!-- Table -->
+        <table v-else class="w-full border-collapse">
           <thead>
-            <tr>
-              <th>#</th>
-              <th>{{ t('common.player') }}</th>
-              <th>{{ t('score.time') }}</th>
-              <th>{{ t('score.accuracy') }}</th>
-              <th>{{ t('game.difficulty') }}</th>
-              <th>{{ t('game.cardType') }}</th>
-              <th>{{ t('common.date') }}</th>
+            <tr class="bg-gray-100 font-semibold text-gray-600">
+              <th class="p-2 md:p-4 text-left border-b border-gray-200">#</th>
+              <th class="p-2 md:p-4 text-left border-b border-gray-200">{{ t('common.player') }}</th>
+              <th class="p-2 md:p-4 text-left border-b border-gray-200">{{ t('score.time') }}</th>
+              <th class="p-2 md:p-4 text-left border-b border-gray-200">{{ t('score.accuracy') }}</th>
+              <th class="p-2 md:p-4 text-left border-b border-gray-200">{{ t('game.difficulty') }}</th>
+              <th class="p-2 md:p-4 text-left border-b border-gray-200">{{ t('game.cardType') }}</th>
+              <th class="p-2 md:p-4 text-left border-b border-gray-200">{{ t('common.date') }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(score, index) in leaderboard" :key="score.id">
-              <td class="rank-cell">{{ calculateRank(index) }}</td>
-              <td>{{ score.playerName }}</td>
-              <td>{{ score.timeSpent.toFixed(2) }}s</td>
-              <td>{{ (score.accuracy * 100).toFixed(2) }}%</td>
-              <td>{{ score.boardSize }}</td>
-              <td>{{ getCardTypeName(score.cardType) }}</td>
-              <td>{{ formatDate(score.createdAt) }}</td>
+            <tr 
+              v-for="(score, index) in leaderboard" 
+              :key="score.id" 
+              class="hover:bg-gray-100"
+            >
+              <td class="p-2 md:p-4 text-left border-b border-gray-200 font-bold text-blue-400">{{ calculateRank(index) }}</td>
+              <td class="p-2 md:p-4 text-left border-b border-gray-200">{{ score.playerName }}</td>
+              <td class="p-2 md:p-4 text-left border-b border-gray-200">{{ score.timeSpent.toFixed(2) }}s</td>
+              <td class="p-2 md:p-4 text-left border-b border-gray-200">{{ (score.accuracy * 100).toFixed(2) }}%</td>
+              <td class="p-2 md:p-4 text-left border-b border-gray-200">{{ score.boardSize }}</td>
+              <td class="p-2 md:p-4 text-left border-b border-gray-200">{{ getCardTypeName(score.cardType) }}</td>
+              <td class="p-2 md:p-4 text-left border-b border-gray-200">{{ formatDate(score.createdAt) }}</td>
             </tr>
           </tbody>
         </table>
-        
-        <div v-if="pagination && !isLoading" class="pagination">
+
+        <!-- Pagination -->
+        <div v-if="pagination && !isLoading" class="flex justify-center items-center mt-8 gap-4">
           <button 
-            class="page-btn" 
-            :disabled="pagination.page <= 1"
+            class="px-4 py-2 bg-blue-400 text-white rounded transition-colors hover:bg-blue-500 disabled:bg-gray-300 disabled:cursor-not-allowed" 
+            :disabled="pagination.page <= 1" 
             @click="changePage(pagination.page - 1)"
           >
             &laquo; {{ t('common.previous') }}
           </button>
-          
-          <span class="page-info">
-            {{ t('common.page') }} {{ pagination.page }} / {{ pagination.pages }}
-          </span>
-          
+          <span class="text-gray-600">{{ t('common.page') }} {{ pagination.page }} / {{ pagination.pages }}</span>
           <button 
-            class="page-btn" 
-            :disabled="pagination.page >= pagination.pages"
+            class="px-4 py-2 bg-blue-400 text-white rounded transition-colors hover:bg-blue-500 disabled:bg-gray-300 disabled:cursor-not-allowed" 
+            :disabled="pagination.page >= pagination.pages" 
             @click="changePage(pagination.page + 1)"
           >
             {{ t('common.next') }} &raquo;
           </button>
         </div>
       </div>
-      
-      <div class="back-button-container">
-        <NuxtLink to="/" class="back-button">
+
+      <!-- Back button -->
+      <div class="text-center mt-8">
+        <NuxtLink 
+          to="/" 
+          class="inline-block px-4 py-3 bg-gray-800 text-white no-underline rounded-lg transition-colors hover:bg-gray-900"
+        >
           &laquo; {{ t('common.backToGame') }}
         </NuxtLink>
       </div>
@@ -92,256 +96,107 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch, onMounted } from 'vue';
-import { useLeaderboard } from '../composables/useLeaderboard';
-import { useI18n } from '../composables/useI18n';
+import { ref, reactive, watch, onMounted } from 'vue'
+import { useI18n } from '../composables/useI18n'
+import { useLeaderboard } from '../composables/useLeaderboard'
 
-const { t } = useI18n();
-const { getLeaderboard, isLoading, leaderboard, error } = useLeaderboard();
+interface Pagination {
+  page: number
+  pages: number
+}
 
-// Pagination state
-const pagination = ref(null);
+interface Score {
+  id: string
+  playerName: string
+  timeSpent: number
+  accuracy: number
+  boardSize: string
+  cardType: string
+  createdAt: string
+}
 
-// Filter options
-const filters = reactive({
+interface Filters {
+  boardSize: string
+  cardType: string
+  page: number
+  limit: number
+}
+
+interface BoardSizeOption {
+  id: string
+  name_nb: string
+}
+
+interface CardType {
+  type: string
+  name_nb: string
+}
+
+const { t } = useI18n()
+const { getLeaderboard, isLoading, leaderboard, error } = useLeaderboard()
+
+const pagination = ref<Pagination | null>(null)
+
+// Filters
+const filters = reactive<Filters>({
   boardSize: '',
   cardType: '',
   page: 1,
   limit: 20
-});
+})
 
-// Available options for filters (same as used in game)
-const boardSizeOptions = [
+// Board sizes
+const boardSizeOptions: BoardSizeOption[] = [
   { id: '2x2', name_nb: 'Altfor enkelt' },
   { id: '2x3', name_nb: 'Veldig enkelt' },
   { id: '3x4', name_nb: 'Enkelt' },
   { id: '4x4', name_nb: 'Normal' },
   { id: '4x5', name_nb: 'Vanskelig' },
   { id: '6x6', name_nb: 'Ekspert' }
-];
+]
 
-const availableCardTypes = [
+// Card types
+const availableCardTypes: CardType[] = [
   { type: 'animals', name_nb: 'Dyr' },
   { type: 'letters', name_nb: 'Bokstaver' }
-];
+]
 
-// Load leaderboard data with current filters
-async function loadLeaderboard() {
+async function loadLeaderboard(): Promise<void> {
   const result = await getLeaderboard({
     boardSize: filters.boardSize,
     cardType: filters.cardType,
     page: filters.page,
     limit: filters.limit
-  });
-  
-  if (result) {
-    pagination.value = result.pagination;
+  })
+
+  if (result && result.pagination) {
+    pagination.value = result.pagination
   }
 }
 
-// Watch for filter changes
 watch(filters, () => {
-  loadLeaderboard();
-});
+  loadLeaderboard()
+})
 
-// Helper functions
-function calculateRank(index) {
-  return ((pagination.value?.page - 1) * filters.limit) + index + 1;
+function calculateRank(index: number): number {
+  return ((pagination.value?.page ?? 1) - 1) * filters.limit + index + 1
 }
 
-function formatDate(dateString) {
-  const date = new Date(dateString);
-  return date.toLocaleDateString();
+function formatDate(dateString: string): string {
+  const date = new Date(dateString)
+  return date.toLocaleDateString()
 }
 
-function getCardTypeName(type) {
-  const cardType = availableCardTypes.find(ct => ct.type === type);
-  return cardType ? cardType.name_nb : type;
+function getCardTypeName(type: string): string {
+  const cardType = availableCardTypes.find(ct => ct.type === type)
+  return cardType ? cardType.name_nb : type
 }
 
-function changePage(newPage) {
-  filters.page = newPage;
+function changePage(newPage: number): void {
+  filters.page = newPage
 }
 
 onMounted(() => {
-  loadLeaderboard();
-});
+  loadLeaderboard()
+})
 </script>
-
-<style scoped>
-.leaderboard-page {
-  min-height: 100vh;
-  background: linear-gradient(322deg, #ba4aff, rgba(186, 74, 255, 0) 70%),
-              linear-gradient(178deg, #008aff, rgba(0, 138, 255, 0) 70%),
-              linear-gradient(24deg, #00ffc6, rgba(0, 255, 198, 0) 35%);
-  padding: 2rem 0;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
-}
-
-.page-title {
-  text-align: center;
-  margin-bottom: 2rem;
-  color: #2d3748;
-  font-size: 2.5rem;
-}
-
-.filter-options {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  margin-bottom: 2rem;
-}
-
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  width: 200px;
-}
-
-.filter-label {
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-  color: #4a5568;
-}
-
-.filter-select {
-  padding: 0.75rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background-color: white;
-}
-
-.leaderboard-table-wrapper {
-  overflow-x: auto;
-  margin-bottom: 2rem;
-}
-
-.leaderboard-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.leaderboard-table th,
-.leaderboard-table td {
-  padding: 1rem;
-  text-align: left;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.leaderboard-table th {
-  background-color: #f7fafc;
-  font-weight: 600;
-  color: #4a5568;
-}
-
-.leaderboard-table tr:hover {
-  background-color: #f7fafc;
-}
-
-.rank-cell {
-  font-weight: bold;
-  color: #4299e1;
-}
-
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 3rem 0;
-}
-
-.loading-spinner {
-  border: 4px solid rgba(0, 0, 0, 0.1);
-  border-radius: 50%;
-  border-top: 4px solid #4299e1;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 2rem;
-  gap: 1rem;
-}
-
-.page-btn {
-  padding: 0.5rem 1rem;
-  background-color: #4299e1;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.page-btn:hover {
-  background-color: #3182ce;
-}
-
-.page-btn:disabled {
-  background-color: #cbd5e0;
-  cursor: not-allowed;
-}
-
-.page-info {
-  color: #4a5568;
-}
-
-.back-button-container {
-  text-align: center;
-  margin-top: 2rem;
-}
-
-.back-button {
-  display: inline-block;
-  padding: 0.75rem 1.5rem;
-  background-color: #2d3748;
-  color: white;
-  text-decoration: none;
-  border-radius: 8px;
-  transition: background-color 0.2s;
-}
-
-.back-button:hover {
-  background-color: #1a202c;
-}
-
-@media (max-width: 768px) {
-  .container {
-    padding: 1rem;
-  }
-  
-  .page-title {
-    font-size: 1.8rem;
-  }
-  
-  .filter-options {
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-  }
-  
-  .leaderboard-table th,
-  .leaderboard-table td {
-    padding: 0.5rem;
-    font-size: 0.9rem;
-  }
-}
-</style>
