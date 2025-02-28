@@ -52,6 +52,8 @@
     "home": "Home",
     "leaderboard": "Leaderboard",
     "show": "Show",
-    "hide": "Hide"
+    "hide": "Hide",
+    "showHighScores": "Show leaderboard",
+    "hideHighScores": "Hide leaderboard"
   }
 }

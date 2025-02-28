@@ -130,7 +130,7 @@
         class="mt-2 w-full p-2 bg-[rgba(255,255,255,0.5)] border border-[rgba(0,0,0,0.1)] rounded transition-colors hover:bg-[rgba(255,255,255,0.8)]"
         @click="toggleLeaderboardPreview"
       >
-        {{ showLeaderboardPreview ? t('common.hide') : t('common.show') }}
+        {{ showLeaderboardPreview ? t('common.hideHighScores') : t('common.showHighScores') }}
       </button>
     </div>
 

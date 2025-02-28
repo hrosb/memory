@@ -52,6 +52,8 @@
     "home": "Hjem",
     "leaderboard": "Resultattavle",
     "show": "Vis",
-    "hide": "Skjul"
+    "hide": "Skjul",
+    "showHighScores": "Vis ledertavle",
+    "hideHighScores": "Skjul ledertavle"
   }
 }
