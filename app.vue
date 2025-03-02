@@ -131,12 +131,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onUnmounted, onMounted } from 'vue';
+import { ref, computed, onUnmounted, onMounted } from 'vue';
 import { useI18n } from './composables/useI18n';
 import { useGameSound } from './composables/useSound';
 import { useLeaderboard } from './composables/useLeaderboard';
 import { useGameState } from './composables/useGameState';
 import { getRandomEncouragement } from './data/encouragement';
+import { 
+  availableCards, 
+  boardSizeOptions, 
+  getAvailableCardTypes 
+} from './data/gameConfig';
 
 const { t, setLocale, locale } = useI18n();
 const { 
@@ -155,7 +160,7 @@ const {
   playerRank
 } = useLeaderboard();
 
-// Use the new game state composable
+// Use the game state composable
 const { 
   gameState, 
   cardType, 
@@ -186,70 +191,8 @@ onMounted(() => {
   });
 });
 
-// Available board sizes
-const boardSizeOptions = [
-  {
-    id: '2x2',
-    rows: 2,
-    columns: 2,
-    name: 'Too easy',
-    name_nb: 'Altfor enkelt'
-  },
-  {
-    id: '2x3',
-    rows: 3,
-    columns: 2,
-    name: 'Very easy',
-    name_nb: 'Veldig enkelt'
-  },
-  {
-    id: '3x4',
-    rows: 4,
-    columns: 3,
-    name: 'Easy',
-    name_nb: 'Enkelt'
-  },
-  {
-    id: '4x4',
-    rows: 4,
-    columns: 4,
-    name: 'Normal',
-    name_nb: 'Normal'    
-  },
-  {
-    id: '4x5',
-    rows: 5,
-    columns: 5,
-    name: 'Hard',
-    name_nb: 'Vanskelig'
-  },
-  {
-    id: '6x6',
-    rows: 6,
-    columns: 6,
-    name: 'Expert',
-    name_nb: 'Ekspert'
-  }
-];
-
-// Available card types
-const availableCards = {
-  'animals': {
-    type: 'animals',
-    name: 'Animals',
-    name_nb: 'Dyr',
-    'cards': ['Lion', 'Tiger', 'Elephant', 'Giraffe', 'Bear', 'Zebra', 'Panda', 'Kangaroo', 'Monkey', 'Wolf', 'Dog', 'Cow', 'Fish', 'Horse', 'Sheep', 'Snake',]
-  },
-  'letters': {
-    type: 'letters',
-    name: 'Letters',
-    name_nb: 'Bokstaver',
-    cards: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', ]
-  }
-};
-
 // Convert availableCards to array format for components
-const availableCardTypes = computed(() => Object.values(availableCards));
+const availableCardTypes = computed(() => getAvailableCardTypes());
 
 // Handle starting a new game
 function handleStartGame(gameOptions) {

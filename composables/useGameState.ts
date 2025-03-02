@@ -1,17 +1,6 @@
 import { ref, reactive, computed } from 'vue';
 import { useUrlSearchParams, useStorage } from '@vueuse/core';
-
-interface CardItem {
-  name: string;
-  revealed: boolean;
-}
-
-interface CardType {
-  type: string;
-  name: string;
-  name_nb: string;
-  cards: string[];
-}
+import { useCards, CardItem, CardType } from './useCards';
 
 interface GameOptions {
   cardType: string;
@@ -39,6 +28,13 @@ interface GameState {
 }
 
 export function useGameState() {
+  // Get card functionality from the new composable
+  const { 
+    generateCards, 
+    handleCardClick: handleCardClickInternal, 
+    clickedCards
+  } = useCards();
+  
   // URL parameters handling
   const urlParams = useUrlSearchParams('history');
   
@@ -84,9 +80,6 @@ export function useGameState() {
   
   const gameIsOngoing = computed(() => gameState.currentGame.started);
   
-  // Clicked cards tracking
-  const clickedCards = ref<number[]>([]);
-  
   // Calculate current accuracy
   const currentAccuracy = computed(() => {
     const totalAttempts = gameState.hits + gameState.misses;
@@ -102,46 +95,17 @@ export function useGameState() {
     });
   };
 
-  // Fisher-Yates shuffle algorithm
-  const shuffleArray = <T>(array: T[]): T[] => {
-    let currentIndex = array.length, randomIndex;
+  // Add event callbacks
+  const onGameCompletedCallbacks: Array<() => void> = [];
 
-    while (currentIndex !== 0) {
-      randomIndex = Math.floor(Math.random() * currentIndex);
-      currentIndex--;
-
-      [array[currentIndex], array[randomIndex]] = [
-        array[randomIndex], array[currentIndex]];
-    }
-
-    return array;
+  // Method to register a callback for game completion
+  const onGameCompleted = (callback: () => void) => {
+    onGameCompletedCallbacks.push(callback);
   };
 
-  // Generate and shuffle cards for the game
-  const generateAndShuffleCards = (type: string, sizeId: string, availableCards: Record<string, CardType>): CardItem[] => {
-    // Extract rows and columns from the sizeId, e.g., '4x4' -> [4, 4]
-    const [rows, columns] = sizeId.split('x').map(Number);
-    const totalCards = rows * columns;
-    const availableCardTypes = Object.values(availableCards);
-    const cardSet = availableCards[type];
-
-    if (!cardSet || cardSet.cards.length < totalCards / 2) {
-      throw new Error('Not enough unique cards for the selected board size');
-    }
-
-    // Randomly select unique cards for the game
-    const selectedCards = shuffleArray([...cardSet.cards]).slice(0, totalCards / 2);
-
-    // Convert each card name to an object with name and revealed properties
-    let gameCards = selectedCards.map(name => ({ name, revealed: false }));
-
-    // Duplicate each card to create pairs, ensuring each is a unique object
-    gameCards = gameCards.reduce((acc, card) => {
-      return [...acc, { ...card }, { ...card }]; // Duplicate with new objects
-    }, [] as CardItem[]);
-
-    // Shuffle the cards
-    return shuffleArray(gameCards);
+  // Method to trigger game completion callbacks
+  const triggerGameCompleted = () => {
+    onGameCompletedCallbacks.forEach(callback => callback());
   };
 
   // Start a new game
@@ -159,7 +123,7 @@ export function useGameState() {
     gameState.gameStartTime = Date.now();
     gameState.hits = 0;
     gameState.misses = 0;
-    gameState.cards = generateAndShuffleCards(gameOptions.cardType, gameOptions.boardSizeId, availableCards);
+    gameState.cards = generateCards(gameOptions.cardType, gameOptions.boardSizeId, availableCards);
     gameState.gameCompleted = false;
 
     // Clear existing interval if any
@@ -185,82 +149,32 @@ export function useGameState() {
     }
   };
 
-  // Handle card click
+  // Handle card click wrapper that updates game state
   const handleCardClick = (index: number, onMatchCallback?: () => void, onCardFlipCallback?: (card: CardItem) => void) => {
-    const card = gameState.cards[index];
-
-    if (card.revealed || clickedCards.value.length >= 2) {
-      return; // Ignore click if the card is already revealed or two cards are clicked
-    }
-
-    card.revealed = true;  // Reveal the clicked card
-    clickedCards.value.push(index);
-
-    // Call the callback when a card is flipped
-    if (onCardFlipCallback) {
-      onCardFlipCallback(card);
-    }
-
-    let clickIsMatch = false;
-    if (clickedCards.value.length === 2) {
-      clickIsMatch = checkForMatch(onMatchCallback);
-    }
-
-    return { card, isMatch: clickIsMatch };
-  };
-
-  // Add event callbacks
-  const onGameCompletedCallbacks: Array<() => void> = [];
-
-  // Method to register a callback for game completion
-  const onGameCompleted = (callback: () => void) => {
-    onGameCompletedCallbacks.push(callback);
-  };
-
-  // Method to trigger game completion callbacks
-  const triggerGameCompleted = () => {
-    onGameCompletedCallbacks.forEach(callback => callback());
-  };
-
-  // Check if the two flipped cards match
-  const checkForMatch = (onMatchCallback?: () => void) => {
-    const [firstIndex, secondIndex] = clickedCards.value;
-    const firstCard = gameState.cards[firstIndex];
-    const secondCard = gameState.cards[secondIndex];
-    let clickIsMatch = false;
-
-    if (firstCard.name === secondCard.name) {
-      // Match found, keep cards revealed and reset clickedCards
-      gameState.hits++;
-      clickedCards.value = [];
-      clickIsMatch = true;
-      
-      if (onMatchCallback) {
-        onMatchCallback();
+    return handleCardClickInternal(gameState.cards, index, {
+      onFlip: (card) => {
+        if (onCardFlipCallback) {
+          onCardFlipCallback(card);
+        }
+      },
+      onMatch: () => {
+        gameState.hits++;
+        if (onMatchCallback) {
+          onMatchCallback();
+        }
+      },
+      onMismatch: () => {
+        gameState.misses++;
+      },
+      onGameComplete: () => {
+        gameState.gameCompleted = true;
+        if (intervalId !== null) {
+          clearInterval(intervalId);
+          intervalId = null;
+        }
+        triggerGameCompleted();
       }
-    } else {
-      gameState.misses++;
-      // No match, hide both cards after a short delay
-      setTimeout(() => {
-        firstCard.revealed = false;
-        secondCard.revealed = false;
-        clickedCards.value = [];
-      }, 1000);
-    }
-
-    // Check if the game is completed (all cards are revealed)
-    if (gameState.cards.every(card => card.revealed)) {
-      gameState.gameCompleted = true;
-      if (intervalId !== null) {
-        clearInterval(intervalId);
-        intervalId = null;
-      }
-      
-      // Trigger game completed callbacks
-      triggerGameCompleted();
-    }
-    
-    return clickIsMatch;
+    });
   };
 
   // Cleanup on component unmount
@@ -284,6 +198,6 @@ export function useGameState() {
     handleCardClick,
     cleanup,
     generateUUID,
-    onGameCompleted  // Export the new method
+    onGameCompleted
   };
 }
