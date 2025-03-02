@@ -245,20 +245,17 @@ const boardSizeId = computed({
   set: (value) => { urlParams.boardSize = value }
 });
 
-// Sync audio settings with URL
+// Sync audio settings with URL - simplified logic
 const audioSettings = useLocalStorage<AudioSettings>('audioSettings', {
-  gfx: urlParams.sound !== 'false', // Default true unless specifically false
-  music: urlParams.music === 'true' // Default false unless specifically true
+  gfx: urlParams.sound !== 'false',
+  music: urlParams.music === 'true'
 })
 
-// Update URL when audio settings change
-watch(() => audioSettings.value.gfx, (newValue) => {
-  urlParams.sound = newValue.toString();
-})
-
-watch(() => audioSettings.value.music, (newValue) => {
-  urlParams.music = newValue.toString();
-})
+// Update URL when audio settings change - more efficient with single watch
+watch(audioSettings, (newValues) => {
+  urlParams.sound = newValues.gfx.toString();
+  urlParams.music = newValues.music.toString();
+}, { deep: true })
 
 // Simplified formState
 const formState = reactive({

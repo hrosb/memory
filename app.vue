@@ -227,9 +227,9 @@ function handleStopGame() {
   hideHighScoreModal();
 }
 
-// Handle card clicks
+// Handle card clicks - simplified to use the composable directly
 function handleCardClick(index) {
-  const result = gameStateHandleCardClick(index, 
+  gameStateHandleCardClick(index, 
     // onMatchCallback
     () => {
       if (soundEnabled.value) {
@@ -248,7 +248,7 @@ function handleCardClick(index) {
   );
 }
 
-// Update scoreboard after game completion
+// Update scoreboard after game completion - removed duplicate ranking logic
 const updateScoreBoard = async () => {
   const finalScore = {
     playerName: gameState.currentGame.playerName || 'Anonymous',
@@ -259,29 +259,23 @@ const updateScoreBoard = async () => {
   };
 
   try {
-    // Submit score to backend API
     const result = await submitScore(finalScore);
     
     if (result) {
       lastSubmittedScore.value = result.score;
-      
-      // If rank is 10 or better, it's a high score for our purposes
       isHighScore.value = result.rank <= 10;
       
       if (isHighScore.value) {
-        // Fetch the updated leaderboard for this board size and card type
         await getLeaderboard({
           boardSize: gameState.boardSizeId,
           cardType: gameState.cardType,
           limit: 10
         });
-        
         showHighScoreModal();
       } else {
         showEncouragementModal();
       }
     } else {
-      // If submission failed, still show the encouragement modal
       showEncouragementModal();
     }
   } catch (error) {

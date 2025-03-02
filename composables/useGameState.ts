@@ -149,8 +149,16 @@ export function useGameState() {
     }
   };
 
-  // Handle card click wrapper that updates game state
-  const handleCardClick = (index: number, onMatchCallback?: () => void, onCardFlipCallback?: (card: CardItem) => void) => {
+  // Handle card click wrapper that updates game state - simplified with default callbacks
+  const handleCardClick = (
+    index: number, 
+    onMatchCallback?: () => void, 
+    onCardFlipCallback?: (card: CardItem) => void
+  ) => {
+    if (!gameState.currentGame.started || gameState.gameCompleted) {
+      return false;
+    }
+    
     return handleCardClickInternal(gameState.cards, index, {
       onFlip: (card) => {
         if (onCardFlipCallback) {

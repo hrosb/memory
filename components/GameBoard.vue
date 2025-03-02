@@ -1,10 +1,15 @@
 <template>
   <div class="game-board" ref="gameBoard" :style="{ ...gridTemplate, width: gameBoardWidth }">
-    <div v-for="(card, index) in cards" :key="index" class="card" :class="{ 'revealed': card.revealed }" @click="handleCardClick(index)" :style="cardSize">
-            <span v-if="cardType !== 'animals'" :class="{ 'hidden': !card.revealed }">{{ card.name }}</span>
+    <div 
+      v-for="(card, index) in cards" 
+      :key="index" 
+      class="card" 
+      :class="{ 'revealed': card.revealed }" 
+      @click="handleCardClick(index)" 
+      :style="cardSize"
+    >
+      <span v-if="cardType !== 'animals'" :class="{ 'hidden': !card.revealed }">{{ card.name }}</span>
       <img v-else :class="{ 'hidden': !card.revealed }" :src="`/images/${card.name.toLowerCase()}.png`">
-      <!--   <div> {{  `images/${card.name.toLowerCase()}.jpeg` }} </div> -->
-
     </div>
   </div>
 </template>
@@ -34,22 +39,25 @@ const gridTemplate = computed(() => {
 
 const cardSize = ref({ width: '100px', height: '100px' }); // Default card size
 
-
+// Simplified card size calculation with better reactive dependencies
 const calculateCardSize = () => {
+  if (!props.gameState || !props.gameState.boardSizeId) return;
+
   const [rows, cols] = props.gameState.boardSizeId.split('x').map(Number);
   const { innerWidth: windowWidth, innerHeight: windowHeight } = window;
-  const margin = 20; // Equal margin on both sides
   
-  // Subtract total margin (left + right) from available width
+  // Calculate available space with consistent margins
+  const margin = 20; 
   const availableWidth = windowWidth - (margin * 2);
   const availableHeight = windowHeight - (margin * 2);
   
   const gapSize = 10;
   const totalGapWidth = gapSize * (cols - 1);
+  const totalGapHeight = gapSize * (rows - 1);
   
   // Calculate card size considering gaps
   const maxCardWidth = (availableWidth - totalGapWidth) / cols;
-  const maxCardHeight = (availableHeight - (gapSize * (rows - 1))) / rows;
+  const maxCardHeight = (availableHeight - totalGapHeight) / rows;
   
   const size = Math.min(maxCardWidth, maxCardHeight);
   
