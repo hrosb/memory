@@ -1,4 +1,3 @@
-import { ref, computed } from 'vue'
 import { useCookie } from '#app'
 import en from '../locales/en.json'
 import nb from '../locales/nb.json'
@@ -26,7 +25,7 @@ export function useI18n() {
 
   const t = (key: string) => {
     const keys = key.split('.')
-    let value = translations[currentLocale.value]
+    let value: any = translations[currentLocale.value as keyof typeof translations]
     
     for (const k of keys) {
       if (value && typeof value === 'object') {

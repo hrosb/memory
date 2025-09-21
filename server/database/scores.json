@@ -68,5 +68,45 @@
     "cardType": "animals",
     "createdAt": "2025-09-21T19:12:22.499Z",
     "updatedAt": "2025-09-21T19:12:22.499Z"
+  },
+  {
+    "id": 8,
+    "playerName": "Harald 🧠",
+    "timeSpent": 2.57,
+    "accuracy": 1,
+    "boardSize": "2x2",
+    "cardType": "animals",
+    "createdAt": "2025-09-21T19:27:17.513Z",
+    "updatedAt": "2025-09-21T19:27:17.513Z"
+  },
+  {
+    "id": 9,
+    "playerName": "Harald 🧠",
+    "timeSpent": 5.71,
+    "accuracy": 0.5,
+    "boardSize": "2x2",
+    "cardType": "animals",
+    "createdAt": "2025-09-21T19:27:25.533Z",
+    "updatedAt": "2025-09-21T19:27:25.533Z"
+  },
+  {
+    "id": 10,
+    "playerName": "Harald 🧠",
+    "timeSpent": 2.11,
+    "accuracy": 1,
+    "boardSize": "2x2",
+    "cardType": "animals",
+    "createdAt": "2025-09-21T19:27:29.055Z",
+    "updatedAt": "2025-09-21T19:27:29.055Z"
+  },
+  {
+    "id": 11,
+    "playerName": "Harald 🧠",
+    "timeSpent": 5.51,
+    "accuracy": 0.5,
+    "boardSize": "2x2",
+    "cardType": "animals",
+    "createdAt": "2025-09-21T19:27:35.841Z",
+    "updatedAt": "2025-09-21T19:27:35.841Z"
   }
 ]

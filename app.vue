@@ -90,17 +90,6 @@
       </div>
     </Modal>
 
-    <!-- Only show retry form after game completion -->
-    <NewGameForm 
-      v-if="gameState.gameCompleted"
-      :game-state="gameState" 
-      mode="retry" 
-      @gotoBoardOptions="handleStopGame"
-      :availableCardTypes="availableCardTypes" 
-      :boardSizeOptions="boardSizeOptions" 
-      @startGame="handleStartGame"
-    />
-
     <!-- Add share dialog -->
     <Modal v-if="showShareDialog" @closeModal="showShareDialog = false">
       <div class="share-modal">
@@ -175,7 +164,7 @@ const {
 } = useGameState();
 
 // Initialize necessary refs for UI state
-const lastSubmittedScore = ref(null);
+const lastSubmittedScore = ref<any>(null);
 const isHighScore = ref(false);
 const highScoreModalVisible = ref(false);
 const showShareDialog = ref(false);
@@ -195,7 +184,7 @@ onMounted(() => {
 const availableCardTypes = computed(() => getAvailableCardTypes());
 
 // Handle starting a new game
-function handleStartGame(gameOptions) {
+function handleStartGame(gameOptions: any) {
   console.log(gameOptions);
   
   // Handle music control
@@ -228,7 +217,7 @@ function handleStopGame() {
 }
 
 // Handle card clicks - simplified to use the composable directly
-function handleCardClick(index) {
+function handleCardClick(index: number) {
   gameStateHandleCardClick(index, 
     // onMatchCallback
     () => {
@@ -253,7 +242,7 @@ const updateScoreBoard = async () => {
   const finalScore = {
     playerName: gameState.currentGame.playerName || 'Anonymous',
     timeSpent: parseFloat(gameState.elapsedTime.toString()),
-    accuracy: parseFloat(currentAccuracy.value) / 100,
+    accuracy: parseFloat(currentAccuracy.value.toString()) / 100,
     boardSize: gameState.boardSizeId,
     cardType: gameState.cardType
   };

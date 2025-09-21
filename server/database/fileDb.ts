@@ -65,9 +65,29 @@ class FileDatabase {
     await this.ensureDbExists()
     try {
       const data = await fs.readFile(this.dataPath, 'utf8')
-      return JSON.parse(data) || []
+      const parsed = JSON.parse(data)
+      
+      // Validate that parsed data is an array
+      if (!Array.isArray(parsed)) {
+        console.warn('Scores file contains invalid data, initializing empty array')
+        return []
+      }
+      
+      return parsed
     } catch (error) {
       console.error('Error reading scores file:', error)
+      // If JSON is corrupt, try to backup and create new
+      try {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+        const backupPath = this.dataPath + `.backup.${timestamp}`
+        await fs.copyFile(this.dataPath, backupPath)
+        console.log(`Corrupt scores file backed up to: ${backupPath}`)
+      } catch (backupError) {
+        console.error('Failed to backup corrupt scores file:', backupError)
+      }
+      
+      // Initialize with empty array
+      await this.writeScores([])
       return []
     }
   }
@@ -88,12 +108,33 @@ class FileDatabase {
   }
 
   async createScore(data: ScoreCreateInput): Promise<Score> {
+    // Validate input data
+    if (!data.playerName || typeof data.playerName !== 'string') {
+      throw new Error('Invalid player name')
+    }
+    if (typeof data.timeSpent !== 'number' || data.timeSpent < 0) {
+      throw new Error('Invalid time spent')
+    }
+    if (typeof data.accuracy !== 'number' || data.accuracy < 0 || data.accuracy > 1) {
+      throw new Error('Invalid accuracy value')
+    }
+    if (!data.boardSize || typeof data.boardSize !== 'string') {
+      throw new Error('Invalid board size')
+    }
+    if (!data.cardType || typeof data.cardType !== 'string') {
+      throw new Error('Invalid card type')
+    }
+
     const scores = await this.readScores()
     const now = new Date().toISOString()
     
     const newScore: Score = {
       id: this.getNextId(scores),
-      ...data,
+      playerName: data.playerName.trim().substring(0, 50), // Limit name length
+      timeSpent: Math.round(data.timeSpent * 100) / 100, // Round to 2 decimal places
+      accuracy: Math.round(data.accuracy * 10000) / 10000, // Round to 4 decimal places
+      boardSize: data.boardSize,
+      cardType: data.cardType,
       createdAt: now,
       updatedAt: now
     }

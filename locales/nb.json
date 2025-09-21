@@ -1,34 +1,34 @@
 {
   "game": {
-    "newGame": "Nytt Spill",
-    "tryAgain": "Prøv Igjen",
+    "newGame": "Nytt spill",
+    "tryAgain": "Prøv igjen",
     "menu": "Meny",
-    "playAgain": "Spill Igjen",
+    "playAgain": "Spill igjen",
     "back": "Tilbake",
-    "startGame": "Start Spill",
+    "startGame": "Start spill",
     "nameInput": "Navn (valgfritt)",
     "namePlaceholder": "Skriv inn navn",
     "cardType": "Korttype",
     "difficulty": "Vanskelighetsgrad",
-    "soundOn": "Lyd På",
-    "soundOff": "Lyd Av",
-    "musicOn": "Musikk På",
-    "musicOff": "Musikk Av",
+    "soundOn": "Lyd på",
+    "soundOff": "Lyd av",
+    "musicOn": "Musikk på",
+    "musicOff": "Musikk av",
     "language": "Språk"
   },
   "score": {
     "time": "Tid",
     "accuracy": "Nøyaktighet",
     "topScores": "Toppscore",
-    "yourTime": "Din Tid",
-    "yourAccuracy": "Din Nøyaktighet",
+    "yourTime": "Din tid",
+    "yourAccuracy": "Din nøyaktighet",
     "globalTopScores": "Ledertavle i verden",
     "rank": "Rangering",
-    "yourRank": "Din Rangering",
+    "yourRank": "Din rangering",
     "noScoresYet": "Ingen poeng ennå"
   },
   "results": {
-    "gameComplete": "Spill Fullført!",
+    "gameComplete": "Spill fullført!",
     "almostThere": "Nesten hjelper ingen på listen!"
   },
   "encouragement": [

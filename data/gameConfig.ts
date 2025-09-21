@@ -32,7 +32,7 @@ export const boardSizeOptions = [
   },
   {
     id: '4x5',
-    rows: 5,
+    rows: 4,
     columns: 5,
     name: 'Hard',
     name_nb: 'Vanskelig'
@@ -55,9 +55,10 @@ export const availableCards = {
     name: 'Animals',
     name_nb: 'Dyr',
     'cards': [
-      'Lion', 'Tiger', 'Elephant', 'Giraffe', 'Bear', 
-      'Zebra', 'Panda', 'Kangaroo', 'Monkey', 'Wolf', 
-      'Dog', 'Cow', 'Fish', 'Horse', 'Sheep', 'Snake'
+      'Bear', 'Bird', 'Cow', 'Dog', 'Elephant', 'Fish', 
+      'Giraffe', 'Horse', 'Kangaroo', 'Lion', 'Monkey', 
+      'Mouse', 'Panda', 'Pig', 'Sheep', 'Snake', 'Tiger', 
+      'Wolf', 'Zebra'
     ]
   },
   'letters': {
@@ -87,7 +88,7 @@ export function getBoardSizeById(id: string) {
  * @returns The card type or undefined if not found
  */
 export function getCardTypeById(id: string) {
-  return availableCards[id];
+  return availableCards[id as keyof typeof availableCards];
 }
 
 /**

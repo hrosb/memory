@@ -1,5 +1,3 @@
-import { ref } from 'vue';
-
 export interface CardItem {
   name: string;
   revealed: boolean;
@@ -52,16 +50,52 @@ export function useCards() {
     availableCards: Record<string, CardType>
   ): CardItem[] => {
     // Extract rows and columns from the sizeId, e.g., '4x4' -> [4, 4]
-    const [rows, columns] = sizeId.split('x').map(Number);
-    const totalCards = rows * columns;
-    const cardSet = availableCards[type];
+    const sizeParts = sizeId.split('x');
+    if (sizeParts.length !== 2) {
+      throw new Error(`Invalid board size format: ${sizeId}`);
+    }
 
-    if (!cardSet || cardSet.cards.length < totalCards / 2) {
-      throw new Error('Not enough unique cards for the selected board size');
+    const [rows, columns] = sizeParts.map(Number);
+    if (isNaN(rows) || isNaN(columns) || rows <= 0 || columns <= 0) {
+      throw new Error(`Invalid board dimensions: ${rows}x${columns}`);
+    }
+
+    const totalCards = rows * columns;
+    if (totalCards % 2 !== 0) {
+      throw new Error(`Board size must have even number of cards: ${totalCards}`);
+    }
+
+    const cardSet = availableCards[type];
+    if (!cardSet) {
+      throw new Error(`Card type "${type}" not found`);
+    }
+
+    const pairsNeeded = totalCards / 2;
+    if (cardSet.cards.length < pairsNeeded) {
+      console.warn(`Not enough unique cards for ${sizeId} board (need ${pairsNeeded}, have ${cardSet.cards.length})`);
+      
+      // Fallback: use smaller board size or repeat cards if absolutely necessary
+      if (cardSet.cards.length >= 2) {
+        const availablePairs = cardSet.cards.length;
+        console.warn(`Using only ${availablePairs} pairs instead of ${pairsNeeded}`);
+        
+        // Create a smaller game with available cards
+        const adjustedTotalCards = availablePairs * 2;
+        const selectedCards = [...cardSet.cards];
+        
+        let gameCards = selectedCards.map(name => ({ name, revealed: false }));
+        gameCards = gameCards.reduce((acc, card) => {
+          return [...acc, { ...card }, { ...card }];
+        }, [] as CardItem[]);
+        
+        return shuffleArray(gameCards);
+      } else {
+        throw new Error(`Insufficient cards available for card type "${type}"`);
+      }
     }
 
     // Randomly select unique cards for the game
-    const selectedCards = shuffleArray([...cardSet.cards]).slice(0, totalCards / 2);
+    const selectedCards = shuffleArray([...cardSet.cards]).slice(0, pairsNeeded);
 
     // Convert each card name to an object with name and revealed properties
     let gameCards = selectedCards.map(name => ({ name, revealed: false }));

@@ -147,8 +147,10 @@
           type="button"
           @click="setLocale('nb')"
           :class="[
-            'flex-1 p-3 border border-gray-200 rounded-lg bg-white text-gray-600 text-sm transition-colors',
-            locale === 'nb' ? 'bg-gray-100 border-blue-500 font-medium' : 'hover:border-blue-500 hover:text-blue-500'
+            'flex-1 p-3 border-2 rounded-lg text-sm transition-all duration-200',
+            locale === 'nb' 
+              ? 'bg-blue-500 border-blue-500 text-white font-semibold shadow-md' 
+              : 'bg-white border-gray-200 text-gray-600 hover:border-blue-500 hover:text-blue-500 hover:bg-blue-50'
           ]"
         >
           Norsk
@@ -157,8 +159,10 @@
           type="button"
           @click="setLocale('en')"
           :class="[
-            'flex-1 p-3 border border-gray-200 rounded-lg bg-white text-gray-600 text-sm transition-colors',
-            locale === 'en' ? 'bg-gray-100 border-blue-500 font-medium' : 'hover:border-blue-500 hover:text-blue-500'
+            'flex-1 p-3 border-2 rounded-lg text-sm transition-all duration-200',
+            locale === 'en' 
+              ? 'bg-blue-500 border-blue-500 text-white font-semibold shadow-md' 
+              : 'bg-white border-gray-200 text-gray-600 hover:border-blue-500 hover:text-blue-500 hover:bg-blue-50'
           ]"
         >
           English
@@ -192,7 +196,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted, watch } from 'vue'
 import { useLocalStorage } from '@vueuse/core'
 import { useUrlSearchParams } from '@vueuse/core'
 import { useI18n } from '../composables/useI18n'
@@ -236,12 +239,12 @@ const showForm = ref(true)
 
 // Sync these with URL parameters rather than just local refs
 const cardType = computed({
-  get: () => urlParams.cardType || props.gameState.cardType,
+  get: () => (urlParams.cardType as string) || props.gameState.cardType,
   set: (value) => { urlParams.cardType = value }
 });
 
 const boardSizeId = computed({
-  get: () => urlParams.boardSize || props.gameState.boardSizeId,
+  get: () => (urlParams.boardSize as string) || props.gameState.boardSizeId,
   set: (value) => { urlParams.boardSize = value }
 });
 

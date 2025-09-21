@@ -64,14 +64,14 @@ export function useGameSound() {
   });
 
   // Handle sound for different events
-  const playCardSound = (card, isMatch = false) => {
+  const playCardSound = (cardInfo: { type?: string; name?: string } | null, isMatch = false) => {
     if (!soundEnabled.value) return;
     
     if (isMatch) {
       correctSound();
     } else {
-      if (card.type === 'letters') {
-        playLetterSound({ id: card.name.toLowerCase() });
+      if (cardInfo?.type === 'letters' && cardInfo?.name) {
+        playLetterSound({ id: cardInfo.name.toLowerCase() as any });
       } else {
         clickSound();
       }
@@ -79,10 +79,6 @@ export function useGameSound() {
   };
 
   // Control music based on game settings
-  interface MusicControlProps {
-    musicOn: boolean;
-  }
-
   const handleGameMusic = (musicOn: boolean): void => {
     if (musicOn && !gameSoundIsPlaying.value) {
       startGameSound();

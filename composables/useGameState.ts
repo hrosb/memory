@@ -1,6 +1,5 @@
-import { ref, reactive, computed } from 'vue';
 import { useUrlSearchParams, useStorage } from '@vueuse/core';
-import { useCards, CardItem, CardType } from './useCards';
+import { useCards, type CardItem, type CardType } from './useCards';
 
 interface GameOptions {
   cardType: string;
@@ -40,17 +39,18 @@ export function useGameState() {
   
   // Create computed refs for cardType and boardSizeId that sync with URL
   const cardType = computed({
-    get: () => urlParams.cardType || 'animals',
+    get: () => (urlParams.cardType as string) || 'animals',
     set: (value) => { urlParams.cardType = value }
   });
 
   const boardSizeId = computed({
-    get: () => urlParams.boardSize || '2x2',
+    get: () => (urlParams.boardSize as string) || '2x2',
     set: (value) => { urlParams.boardSize = value }
   });
 
   // Timer management
   let intervalId: number | null = null;
+  let isCleanedUp = false;
 
   // Game state initialization
   const gameState = reactive<GameState>({
@@ -71,11 +71,11 @@ export function useGameState() {
   });
 
   // Local storage for scores
-  const storeBoardLocalStorage = useStorage('memoryGameScoreBoardReactive', {});
+  const storeBoardLocalStorage = useStorage<Record<string, any>>('memoryGameScoreBoardReactive', {});
   
   const currentGameScoreBoardReactive = computed(() => {
     const scoreKey = `${gameState.boardSizeId}-${gameState.cardType}`;
-    return storeBoardLocalStorage.value?.[scoreKey]?.splice(0, 10) || [];
+    return storeBoardLocalStorage.value?.[scoreKey]?.slice(0, 10) || [];
   });
   
   const gameIsOngoing = computed(() => gameState.currentGame.started);
@@ -110,6 +110,9 @@ export function useGameState() {
 
   // Start a new game
   const startGame = (gameOptions: GameOptions, availableCards: Record<string, CardType>) => {
+    // Prevent starting game if component is cleaned up
+    if (isCleanedUp) return;
+    
     if (gameOptions.playerName) {
       gameState.currentGame.playerName = gameOptions.playerName;
     }
@@ -129,11 +132,20 @@ export function useGameState() {
     // Clear existing interval if any
     if (intervalId !== null) {
       clearInterval(intervalId);
+      intervalId = null;
     }
 
-    // Start a new interval to update elapsed time every second
+    // Start a new interval to update elapsed time every 10ms
     intervalId = window.setInterval(() => {
-      gameState.elapsedTime = ((Date.now() - gameState.gameStartTime!) / 1000).toFixed(2);
+      // Check if component is still active
+      if (isCleanedUp || !gameState.gameStartTime) {
+        if (intervalId !== null) {
+          clearInterval(intervalId);
+          intervalId = null;
+        }
+        return;
+      }
+      gameState.elapsedTime = ((Date.now() - gameState.gameStartTime) / 1000).toFixed(2);
     }, 10);
   };
 
@@ -142,6 +154,7 @@ export function useGameState() {
     gameState.gameCompleted = false;
     gameState.currentGame.uuid = '';
     gameState.currentGame.started = false;
+    gameState.gameStartTime = null;
     
     if (intervalId !== null) {
       clearInterval(intervalId);
@@ -187,10 +200,14 @@ export function useGameState() {
 
   // Cleanup on component unmount
   const cleanup = () => {
+    isCleanedUp = true;
     if (intervalId !== null) {
       clearInterval(intervalId);
       intervalId = null;
     }
+    // Clear any remaining game state
+    gameState.gameStartTime = null;
+    gameState.currentGame.started = false;
   };
 
   return {

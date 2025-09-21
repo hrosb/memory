@@ -55,9 +55,9 @@ const calculateCardSize = () => {
   const totalGapWidth = gapSize * (cols - 1);
   const totalGapHeight = gapSize * (rows - 1);
   
-  // Calculate card size considering gaps
-  const maxCardWidth = (availableWidth - totalGapWidth) / cols;
-  const maxCardHeight = (availableHeight - totalGapHeight) / rows;
+  // Calculate card size considering gaps with minimum size protection
+  const maxCardWidth = Math.max((availableWidth - totalGapWidth) / cols, 50);
+  const maxCardHeight = Math.max((availableHeight - totalGapHeight) / rows, 50);
   
   const size = Math.min(maxCardWidth, maxCardHeight);
   
@@ -71,14 +71,26 @@ const calculateCardSize = () => {
 // Change from maxWidth to width for more precise control
 const gameBoardWidth = ref('auto');
 
+// Better resize handler with throttling
+let resizeTimeout: number | null = null;
+const throttledResize = () => {
+  if (resizeTimeout) {
+    clearTimeout(resizeTimeout);
+  }
+  resizeTimeout = window.setTimeout(calculateCardSize, 100);
+};
 
 onMounted(() => {
   calculateCardSize();
-  window.addEventListener('resize', calculateCardSize);
+  window.addEventListener('resize', throttledResize);
 });
 
 onUnmounted(() => {
-  window.removeEventListener('resize', calculateCardSize);
+  window.removeEventListener('resize', throttledResize);
+  if (resizeTimeout) {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = null;
+  }
 });
 </script>
 
