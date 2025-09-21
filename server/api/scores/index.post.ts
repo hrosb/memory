@@ -1,5 +1,5 @@
 import { H3Event } from 'h3'
-import prisma from '~/server/database/client'
+import fileDb from '~/server/database/fileDb'
 
 export default defineEventHandler(async (event: H3Event) => {
   try {
@@ -23,29 +23,20 @@ export default defineEventHandler(async (event: H3Event) => {
     }
 
     // Create the score record
-    const newScore = await prisma.score.create({
-      data: {
-        playerName: body.playerName,
-        timeSpent: body.timeSpent,
-        accuracy: body.accuracy,
-        boardSize: body.boardSize,
-        cardType: body.cardType
-      }
+    const newScore = await fileDb.createScore({
+      playerName: body.playerName,
+      timeSpent: body.timeSpent,
+      accuracy: body.accuracy,
+      boardSize: body.boardSize,
+      cardType: body.cardType
     })
 
     // Get the player's rank for this board size and card type
-    const betterScores = await prisma.score.count({
-      where: {
-        boardSize: body.boardSize,
-        cardType: body.cardType,
-        OR: [
-          { timeSpent: { lt: body.timeSpent } },
-          {
-            timeSpent: body.timeSpent,
-            accuracy: { gt: body.accuracy }
-          }
-        ]
-      }
+    const betterScores = await fileDb.countBetterScores({
+      timeSpent: body.timeSpent,
+      accuracy: body.accuracy,
+      boardSize: body.boardSize,
+      cardType: body.cardType
     })
 
     const rank = betterScores + 1
@@ -54,7 +45,7 @@ export default defineEventHandler(async (event: H3Event) => {
       score: newScore,
       rank
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to create score:', error)
     
     if (error.statusCode) {

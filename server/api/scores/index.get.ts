@@ -1,5 +1,5 @@
 import { H3Event } from 'h3'
-import prisma from '~/server/database/client'
+import fileDb from '~/server/database/fileDb'
 
 export default defineEventHandler(async (event: H3Event) => {
   try {
@@ -9,38 +9,18 @@ export default defineEventHandler(async (event: H3Event) => {
     const cardType = query.cardType as string | undefined
     const limit = Number(query.limit || 10)
     const page = Number(query.page || 1)
-    const skip = (page - 1) * limit
 
     // Build filter object based on provided parameters
-    const where = {
+    const filter = {
       ...(boardSize && { boardSize }),
       ...(cardType && { cardType })
     }
 
     // Get scores with pagination
-    const scores = await prisma.score.findMany({
-      where,
-      orderBy: [
-        { timeSpent: 'asc' },
-        { accuracy: 'desc' }
-      ],
-      skip,
-      take: limit
-    })
+    const result = await fileDb.findManyScores(filter, { limit, page })
 
-    // Get total count for pagination
-    const total = await prisma.score.count({ where })
-
-    return {
-      scores,
-      pagination: {
-        total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit)
-      }
-    }
-  } catch (error) {
+    return result
+  } catch (error: any) {
     console.error('Failed to retrieve scores:', error)
     throw createError({
       statusCode: 500,

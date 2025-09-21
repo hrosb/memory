@@ -1,0 +1,72 @@
+[
+  {
+    "id": 1,
+    "playerName": "Memory Master",
+    "timeSpent": 12.5,
+    "accuracy": 1,
+    "boardSize": "4x4",
+    "cardType": "animals",
+    "createdAt": "2025-09-21T19:10:32.891Z",
+    "updatedAt": "2025-09-21T19:10:32.891Z"
+  },
+  {
+    "id": 2,
+    "playerName": "Quick Thinker",
+    "timeSpent": 15.2,
+    "accuracy": 0.95,
+    "boardSize": "4x4",
+    "cardType": "animals",
+    "createdAt": "2025-09-21T19:10:32.892Z",
+    "updatedAt": "2025-09-21T19:10:32.892Z"
+  },
+  {
+    "id": 3,
+    "playerName": "Card Shark",
+    "timeSpent": 20.1,
+    "accuracy": 0.9,
+    "boardSize": "4x4",
+    "cardType": "letters",
+    "createdAt": "2025-09-21T19:10:32.892Z",
+    "updatedAt": "2025-09-21T19:10:32.892Z"
+  },
+  {
+    "id": 4,
+    "playerName": "Brain Wizard",
+    "timeSpent": 5.8,
+    "accuracy": 1,
+    "boardSize": "2x2",
+    "cardType": "animals",
+    "createdAt": "2025-09-21T19:10:32.893Z",
+    "updatedAt": "2025-09-21T19:10:32.893Z"
+  },
+  {
+    "id": 5,
+    "playerName": "Puzzle Pro",
+    "timeSpent": 60.3,
+    "accuracy": 0.85,
+    "boardSize": "6x6",
+    "cardType": "letters",
+    "createdAt": "2025-09-21T19:10:32.893Z",
+    "updatedAt": "2025-09-21T19:10:32.893Z"
+  },
+  {
+    "id": 6,
+    "playerName": "Harald 🧠",
+    "timeSpent": 3.64,
+    "accuracy": 0.6667000000000001,
+    "boardSize": "2x2",
+    "cardType": "animals",
+    "createdAt": "2025-09-21T19:10:40.706Z",
+    "updatedAt": "2025-09-21T19:10:40.706Z"
+  },
+  {
+    "id": 7,
+    "playerName": "Test Player",
+    "timeSpent": 25.3,
+    "accuracy": 0.88,
+    "boardSize": "4x4",
+    "cardType": "animals",
+    "createdAt": "2025-09-21T19:12:22.499Z",
+    "updatedAt": "2025-09-21T19:12:22.499Z"
+  }
+]

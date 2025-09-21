@@ -1,9 +1,9 @@
 import { H3Event } from 'h3'
-import prisma from '~/server/database/client'
+import fileDb from '~/server/database/fileDb'
 
 export default defineEventHandler(async (event: H3Event) => {
   try {
-    const id = parseInt(event.context.params?.id, 10)
+    const id = parseInt(event.context.params?.id || '', 10)
     
     if (isNaN(id)) {
       throw createError({
@@ -12,9 +12,7 @@ export default defineEventHandler(async (event: H3Event) => {
       })
     }
 
-    const score = await prisma.score.findUnique({
-      where: { id }
-    })
+    const score = await fileDb.findUniqueScore(id)
 
     if (!score) {
       throw createError({
@@ -24,7 +22,7 @@ export default defineEventHandler(async (event: H3Event) => {
     }
 
     return score
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to retrieve score:', error)
     
     if (error.statusCode) {
